@@ -1,7 +1,7 @@
 var MP={
     init(){
         gid('mini-container').innerHTML=`
-        <div id="mini-player" class="hidden fixed left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-[160]" style="bottom:82px;transition:transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);will-change:transform;transform:translate3d(0,150px,0);">
+        <div id="mini-player" class="hidden fixed left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-[160]" style="bottom:92px;transition:transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);will-change:transform;transform:translate3d(0,150px,0);">
             <div id="mini-player-inner" onclick="FullPlayer.open()" class="rounded-2xl px-3.5 py-2.5 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-all relative overflow-hidden bg-white/[0.12] backdrop-blur-2xl border border-white/20 shadow-2xl group">
                 
                 <!-- Overlay for Next Song Transition (AutoNext last 10s) -->

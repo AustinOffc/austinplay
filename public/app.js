@@ -397,7 +397,7 @@ var App={
         localStorage.removeItem('theme');
 
         gid('nav-container').innerHTML=`
-        <div class="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center">
+        <div class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[170] flex flex-col items-center">
             <div id="nav-expand-panel" class="nav-expand-panel glass-dock rounded-[28px] py-2 px-2 mb-3 flex items-center gap-1 shadow-2xl">
                 <button onclick="App.switch('home')" id="nav-home" class="nav-item group relative flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation py-1.5 px-2.5 rounded-2xl transition-all duration-300 active:scale-95">
                     <i data-lucide="home" class="w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300"></i>
