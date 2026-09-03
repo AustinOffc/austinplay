@@ -44,14 +44,14 @@ var Profile = {
                     <div class="text-xs font-semibold text-white/60 uppercase tracking-wide mb-1 flex items-center gap-1.5">
                         <i data-lucide="heart" class="w-3.5 h-3.5 text-white fill-current"></i> Lagu Yang Disukai
                     </div>
-                    <p class="text-sm font-medium text-white/90 bg-white/5 p-2.5 rounded-xl border border-white/5">Semua lagu XXXTENTACION</p>
+                    <p class="text-sm font-medium text-white/90 bg-white/5 p-2.5 rounded-xl border border-white/5">Semua lagu TWENTY ONE PILOTS</p>
                 </div>
 
                 <div>
                     <div class="text-xs font-semibold text-white/60 uppercase tracking-wide mb-1 flex items-center gap-1.5">
                         <i data-lucide="disc" class="w-3.5 h-3.5 text-white/70"></i> Playlist Yang Disukai
                     </div>
-                    <p class="text-sm font-medium text-white/90 bg-white/5 p-2.5 rounded-xl border border-white/5">Semua album XXXTENTACION</p>
+                    <p class="text-sm font-medium text-white/90 bg-white/5 p-2.5 rounded-xl border border-white/5">Semua album TWENTY ONE PILOTS</p>
                 </div>
             </div>
             

@@ -212,7 +212,7 @@ var Home = {
 
         if (catName === 'Developer Profile') {
             try {
-                var r = await fetch(API.search + '?query=' + encodeURIComponent('XXXTENTACION') + '&type=all');
+                var r = await fetch(API.search + '?query=' + encodeURIComponent('TWENTY ONE PILOTS') + '&type=all');
                 var d = await r.json();
                 if (d.status && d.result) {
                     S.hc = d.result.songs ? d.result.songs.map(function(s) {
@@ -231,19 +231,19 @@ var Home = {
             } catch(e) { S.hc = []; S.hcp = []; }
 
             S.favArtistsDev = [
-                { name: 'XXXTENTACION', id: 'UC8E6Rlb6pPspk1KkLInmPBA', cover: 'https://i.scdn.co/image/ab6761610000e5eb806a16d223847e335e2e8e3c' },
-                { name: 'Juice WRLD', id: 'UC0BletW9py84h0beCD26WHQ', cover: 'https://i.scdn.co/image/ab6761610000e5eb1e345853b015b6d510006767' },
-                { name: '2Pac', id: 'UC24x07EwV_KkGf-k9o-94qg', cover: 'https://i.scdn.co/image/ab6761610000e5eb1a051d9539d09c2a78f3068e' },
-                { name: 'Lil Peep', id: 'UCsR6_b319eYpE8J40tI7G3g', cover: 'https://i.scdn.co/image/ab6761610000e5eb14081c3b5fa78f0f35ef1d55' },
-                { name: 'Lil Loaded', id: 'UCz_0qN0d1p8J80K6r49q8BA', cover: 'https://i.scdn.co/image/ab6761610000e5eb871b65e902b66236b568326e' },
-                { name: 'NLE Choppa', id: 'UCv_Gq8T1R2W1dY7I7G9G9qg', cover: 'https://i.scdn.co/image/ab6761610000e5ebfa0ee4d9a244434db03405f6' },
-                { name: 'Ice Cube', id: 'UCa5K8O9W4A5G6k-7Y8I8G9g', cover: 'https://i.scdn.co/image/ab6761610000e5ebd7f7bbffdf4e45ebef823158' },
-                { name: 'Eazy-E', id: 'UCa0G7K8I8W1dY7I7G9G9qg1', cover: 'https://i.scdn.co/image/ab6761610000e5ebf537b0185966bbcd238d227b' },
-                { name: 'Eminem', id: 'UCn_128A3X8K2wF7F5Y7O_8g', cover: 'https://i.scdn.co/image/ab6761610000e5eba00b11c129b27a88fc72f36b' }
+                { name: 'Twenty One Pilots', id: '', cover: '' },
+                { name: 'Imagine Dragons', id: '', cover: '' },
+                { name: 'Panic! At The Disco', id: '', cover: '' },
+                { name: 'Fall Out Boy', id: '', cover: '' },
+                { name: 'OneRepublic', id: '', cover: '' },
+                { name: 'Linkin Park', id: '', cover: '' },
+                { name: 'My Chemical Romance', id: '', cover: '' },
+                { name: 'Coldplay', id: '', cover: '' },
+                { name: 'AJR', id: '', cover: '' }
             ];
 
             try {
-                var ra = await fetch(API.search + '?query=' + encodeURIComponent('XXXTENTACION Juice WRLD 2Pac Lil Peep Lil Loaded NLE Choppa Ice Cube Eazy-E Eminem') + '&type=artists');
+                var ra = await fetch(API.search + '?query=' + encodeURIComponent('Twenty One Pilots Imagine Dragons Panic At The Disco Fall Out Boy OneRepublic Linkin Park My Chemical Romance Coldplay AJR') + '&type=artists');
                 var da = await ra.json();
                 if (da.status && da.result && da.result.artists && da.result.artists.length > 0) {
                     da.result.artists.forEach(function(art) {
@@ -337,7 +337,7 @@ var Home = {
                 '</div>';
             }).join('');
         } else {
-            songsHtml = '<p class="text-white/60 text-sm py-4 col-span-2">Memuat lagu XXXTENTACION...</p>';
+            songsHtml = '<p class="text-white/60 text-sm py-4 col-span-2">Memuat lagu TWENTY ONE PILOTS...</p>';
         }
 
         var plistHtml = '';
@@ -381,7 +381,7 @@ var Home = {
                         <i data-lucide="heart" class="w-4 h-4 text-white fill-current"></i>
                         <span>Lagu Yang Disukai</span>
                     </h2>
-                    <p class="text-xs text-white/60 ml-6 mt-0.5">(Semua lagu XXXTENTACION)</p>
+                    <p class="text-xs text-white/60 ml-6 mt-0.5">(Semua lagu TWENTY ONE PILOTS)</p>
                 </div>
                 <div class="grid grid-rows-4 grid-flow-col auto-cols-[calc(50vw-24px)] sm:auto-cols-[300px] gap-2.5 overflow-x-auto hide-scrollbar pb-3 snap-x">
                     ${songsHtml}
@@ -394,7 +394,7 @@ var Home = {
                         <i data-lucide="disc" class="w-4 h-4 text-white/70"></i>
                         <span>Playlist Yang Disukai</span>
                     </h2>
-                    <p class="text-xs text-white/60 ml-6 mt-0.5">Semua album xxxtentacion</p>
+                    <p class="text-xs text-white/60 ml-6 mt-0.5">Semua album TWENTY ONE PILOTS</p>
                 </div>
                 <div class="flex gap-3 overflow-x-auto hide-scrollbar pb-3">${plistHtml}</div>
             </div>` : ''}
@@ -575,16 +575,16 @@ var Home = {
         } catch(e){}
 
         var topArtistsList = [
-            { name: 'XXXTENTACION', id: 'UCnAcxgRZ065f_eXK1o85c1w', cover: 'https://yt3.googleusercontent.com/No3I8pA9ows2dy6NElEr9mCXLzYxgjVvsQr7h69C03palsH1u8Q8iw-sAAUxav599Wmi64up8lbDGbI=w800-h800-l90-rj' },
-            { name: 'Lil Peep', id: 'UCxcyWcW0kZFGRyetDHr3UuA', cover: 'https://yt3.googleusercontent.com/TbvXoTXJz8a2xfkJxZsI0riSyrUSibnVHBFxhHTeJefWY-2-60x0VhUPkO89uF3CGOPLalsTTM-OlEeI=w800-h800-l90-rj' },
-            { name: 'Juice WRLD', id: 'UCbn0GRdgsQtl9hlV-IqxFGg', cover: 'https://lh3.googleusercontent.com/6YKQ7fDb3ISfzNUjpJnXX1FLw9EQ8eK5qHa07VANJtkaGagUtqtHiAOKz2AJ1AoASNacrCeg8pd35ao=w800-h800-l90-rj' },
-            { name: 'Lil Loaded', id: 'UCzM0GZjC6wQnvpljr3SbKRw', cover: 'https://lh3.googleusercontent.com/jectExZmYnwQhQWHO_gqTHDhDlOpz6HMwR5kd8f6a2fQ7-KVeSGoR_IHuZPIk_PHQEt-0jzQiCCU-io=w800-h800-l90-rj' },
+            { name: 'Twenty One Pilots', id: '', cover: '' },
+            { name: 'Imagine Dragons', id: '', cover: '' },
+            { name: 'Panic! At The Disco', id: '', cover: '' },
+            { name: 'Fall Out Boy', id: '', cover: '' },
             { name: 'Hindia', id: 'UCzhVLh7xVyH3MpqO_KY6SYg', cover: 'https://yt3.googleusercontent.com/8ImMAMQSD4FA6-gdqCZWSFaB-drHvkdfiFcFAk7Mcyy56ctfWD-Xxno-CHfGC4L6Ql8aR61XT0vX0F4b=w800-h800-l90-rj' }
         ];
         S.ha = topArtistsList;
 
         try {
-            var ra = await fetch(API.search + '?query=' + encodeURIComponent('XXXTENTACION Lil Peep Juice WRLD Lil Loaded Hindia') + '&type=artists');
+            var ra = await fetch(API.search + '?query=' + encodeURIComponent('Twenty One Pilots Imagine Dragons Panic At The Disco Fall Out Boy Hindia') + '&type=artists');
             var da = await ra.json();
             if (da.status && da.result && da.result.artists && da.result.artists.length > 0) {
                 da.result.artists.forEach(function(art) {
