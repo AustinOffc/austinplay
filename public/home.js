@@ -243,18 +243,22 @@ var Home = {
             ];
 
             try {
-                var ra = await fetch(API.search + '?query=' + encodeURIComponent('Twenty One Pilots Imagine Dragons Panic At The Disco Fall Out Boy OneRepublic Linkin Park My Chemical Romance Coldplay AJR') + '&type=artists');
-                var da = await ra.json();
-                if (da.status && da.result && da.result.artists && da.result.artists.length > 0) {
-                    da.result.artists.forEach(function(art) {
-                        var artName = art.title || art.name || '';
-                        var matched = S.favArtistsDev.find(function(f) { return f.name.toLowerCase() === artName.toLowerCase(); });
-                        if (matched) {
-                            if (art.cover) matched.cover = art.cover;
-                            if (art.id) matched.id = art.id;
-                        }
-                    });
-                }
+                var enrichResultsDev = await Promise.all(S.favArtistsDev.map(function(a) {
+                    return fetch(API.search + '?query=' + encodeURIComponent(a.name) + '&type=artists')
+                        .then(function(res) { return res.json(); })
+                        .catch(function() { return null; });
+                }));
+                enrichResultsDev.forEach(function(da, i) {
+                    if (da && da.status && da.result && da.result.artists && da.result.artists.length > 0) {
+                        var target = S.favArtistsDev[i];
+                        var best = da.result.artists.find(function(art) {
+                            var artName = (art.title || art.name || '').toLowerCase().trim();
+                            return artName === target.name.toLowerCase().trim();
+                        }) || da.result.artists[0];
+                        if (best.cover) target.cover = best.cover;
+                        if (best.id) target.id = best.id;
+                    }
+                });
             } catch(ea){}
 
             Home.renderDeveloperProfileView();
@@ -584,18 +588,22 @@ var Home = {
         S.ha = topArtistsList;
 
         try {
-            var ra = await fetch(API.search + '?query=' + encodeURIComponent('Twenty One Pilots Imagine Dragons Panic At The Disco Fall Out Boy Hindia') + '&type=artists');
-            var da = await ra.json();
-            if (da.status && da.result && da.result.artists && da.result.artists.length > 0) {
-                da.result.artists.forEach(function(art) {
-                    var artName = (art.title || art.name || '').toLowerCase();
-                    var matched = S.ha.find(function(a) { return a.name.toLowerCase() === artName || artName.includes(a.name.toLowerCase()); });
-                    if (matched) {
-                        if (art.cover) matched.cover = art.cover;
-                        if (art.id) matched.id = art.id;
-                    }
-                });
-            }
+            var enrichResults = await Promise.all(S.ha.map(function(a) {
+                return fetch(API.search + '?query=' + encodeURIComponent(a.name) + '&type=artists')
+                    .then(function(res) { return res.json(); })
+                    .catch(function() { return null; });
+            }));
+            enrichResults.forEach(function(da, i) {
+                if (da && da.status && da.result && da.result.artists && da.result.artists.length > 0) {
+                    var target = S.ha[i];
+                    var best = da.result.artists.find(function(art) {
+                        var artName = (art.title || art.name || '').toLowerCase().trim();
+                        return artName === target.name.toLowerCase().trim();
+                    }) || da.result.artists[0];
+                    if (best.cover) target.cover = best.cover;
+                    if (best.id) target.id = best.id;
+                }
+            });
         } catch(e) {}
 
         Home.show();
