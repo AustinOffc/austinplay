@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                    console.log('PWA SW Registered:', reg.scope);
+                }).catch(function(err) {
+                    console.error('PWA SW Register failed:', err);
+                });
+            });
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="referrer" content="no-referrer">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#050507">
+    <title>AustinPlay</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link rel="apple-touch-icon" href="/logo.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AustinPlay">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Open Graph Tags -->
+    <meta property="og:site_name" content="AustinPlay">
+    <meta property="og:title" content="AustinPlay">
+    <meta property="og:description" content="AustinPlay - Web Music Player">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="/">
+    <meta property="og:image" content="https://www.gobox.my.id/file/R0ym4wqfznmp.png">
+    <meta property="og:image:secure_url" content="https://www.gobox.my.id/file/R0ym4wqfznmp.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="600">
+    <meta property="og:image:height" content="600">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AustinPlay">
+    <meta name="twitter:description" content="AustinPlay - Web Music Player">
+    <meta name="twitter:image" content="https://www.gobox.my.id/file/R0ym4wqfznmp.png">
+    <meta name="twitter:image:src" content="https://www.gobox.my.id/file/R0ym4wqfznmp.png">
+
+    <script>
+        window.lucide = window.lucide || { createIcons: function() {} };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest" onload="if(window.lucide && typeof window.lucide.createIcons === 'function') try{ window.lucide.createIcons(); } catch(e){}"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+
+        :root {
+            /* Legacy tokens kept alive — player.js / library.js reference these directly */
+            --bg-color: #141416;
+            --text-primary: #f3f3f1;
+            --text-secondary: #8a8a8a;
+            --nm-shadow-flat: 0 1px 0 rgba(255,255,255,0.03), 0 10px 26px rgba(0,0,0,0.5);
+            --nm-shadow-inset: inset 0 2px 5px rgba(0,0,0,0.6);
+            --nm-shadow-flat-sm: 0 6px 16px rgba(0,0,0,0.45);
+            --nm-shadow-inset-sm: inset 0 1px 3px rgba(0,0,0,0.5);
+            --border-color: rgba(255, 255, 255, 0.10);
+
+            /* New monochrome-minimal system */
+            --void: #070707;
+            --surface: #131315;
+            --surface-2: #1b1b1d;
+            --surface-3: #232325;
+            --ink: #f3f3f1;
+            --ink-dim: #8a8a8a;
+            --ink-faint: #57575a;
+            --hair: rgba(255,255,255,0.10);
+            --hair-strong: rgba(255,255,255,0.22);
+            --danger: #cf4a41;
+            --ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --font-display: 'Fraunces', Georgia, serif;
+            --font-ui: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        html, body { background: var(--void); color: var(--text-primary); font-family: var(--font-ui); transition: background 0.6s var(--ease), color 0.6s var(--ease); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+        .pt-safe { padding-top: max(2.5rem, env(safe-area-inset-top)); }
+        .fill-current { fill: currentColor; }
+        .filter-tab.active { background: var(--ink) !important; color: #0a0a0a !important; box-shadow: none; }
+
+        /* Typography — display serif reserved for hero moments, kept out of dense small UI */
+        h1, .chrome-text, .lyric-line,
+        .text-lg.font-black, .text-xl.font-black, .text-2xl.font-black, .text-3xl.font-black, .text-5xl.font-black {
+            font-family: var(--font-display);
+            letter-spacing: -0.01em;
+        }
+
+        /* ===== Monochrome grain backdrop ===== */
+        .app-bg {
+            position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+            background: radial-gradient(circle at 50% 0%, #101012 0%, var(--void) 60%);
+        }
+        .app-bg::after {
+            content: "";
+            position: absolute; inset: 0;
+            opacity: .05; mix-blend-mode: overlay; pointer-events: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+        }
+
+        /* ===== Flat hairline surfaces (replaces neumorphic glass) ===== */
+        .glass-card {
+            background: var(--surface);
+            border: 1px solid var(--hair);
+            box-shadow: none;
+            transition: background 0.3s var(--ease), border-color 0.3s var(--ease), transform 0.3s var(--ease);
+        }
+        .glass-card:hover {
+            background: var(--surface-2);
+            border-color: var(--hair-strong);
+            transform: translateY(-2px);
+        }
+        .glass-dock {
+            background: var(--void);
+            border: 1px solid var(--hair);
+            box-shadow: 0 -1px 0 var(--hair);
+        }
+        .glass {
+            background: var(--surface);
+            box-shadow: none;
+            border: 1px solid var(--hair);
+            border-radius: 0.9rem;
+            transition: all 0.3s var(--ease);
+        }
+        .glass-hover {
+            transition: transform 0.3s var(--ease), background 0.3s var(--ease);
+        }
+        .glass-hover:hover {
+            background: var(--surface-2);
+            transform: translateY(-2px);
+        }
+        .glass-strong {
+            background: var(--bg-color);
+            box-shadow: var(--nm-shadow-flat);
+            border: 1px solid var(--border-color);
+            border-radius: 0.9rem;
+            transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease);
+        }
+        .glass-input {
+            background: var(--bg-color);
+            box-shadow: var(--nm-shadow-inset-sm);
+            border: 1px solid var(--border-color);
+            border-radius: 0.6rem;
+            transition: box-shadow 0.5s var(--ease), border-color 0.3s var(--ease);
+        }
+        .glass-input:focus-within, .glass-input:focus {
+            box-shadow: var(--nm-shadow-inset);
+            border-color: var(--hair-strong);
+        }
+        .glass-pane {
+            background: var(--bg-color);
+        }
+        .glass-edge {
+            border: 1px solid var(--border-color);
+        }
+
+        .chrome-text { color: var(--ink); font-weight: 600; }
+
+        .btn-chrome {
+            position: relative;
+            overflow: hidden;
+            background: transparent;
+            box-shadow: none;
+            border: 1px solid var(--hair-strong);
+            color: var(--text-primary);
+            border-radius: 0.75rem;
+            transition: background 0.35s var(--ease), color 0.35s var(--ease), transform 0.25s var(--ease), border-color 0.35s var(--ease);
+        }
+        .btn-chrome:hover {
+            background: var(--ink);
+            color: #0a0a0a;
+            border-color: var(--ink);
+            transform: translateY(-1px);
+        }
+        .btn-chrome:active {
+            transform: scale(0.97);
+        }
+
+        /* ===== Expandable bottom nav dock ===== */
+        .nav-fab {
+            transition: background 0.35s var(--ease), transform 0.3s var(--ease), border-color 0.35s var(--ease);
+        }
+        .nav-fab--active {
+            background: var(--ink);
+            border-color: var(--ink);
+        }
+        .nav-fab--active #nav-fab-icon,
+        .nav-fab--active i {
+            color: #0a0a0a;
+        }
+        .nav-fab #nav-fab-icon {
+            transition: transform 0.35s var(--ease);
+        }
+        .nav-expand-panel {
+            opacity: 0;
+            transform: translateY(10px) scale(0.92);
+            pointer-events: none;
+            transform-origin: bottom center;
+            transition: opacity 0.3s var(--ease), transform 0.35s var(--ease);
+        }
+        .nav-expand-panel--open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        /* ===== Expandable "more categories" grid on Home ===== */
+        .home-more-toggle {
+            transition: background 0.3s var(--ease), transform 0.3s var(--ease), border-color 0.3s var(--ease);
+        }
+        .home-more-toggle--active {
+            background: #fff;
+            color: #0a0a0a;
+            border-color: #fff;
+        }
+        .home-more-toggle--active i { color: #0a0a0a; }
+        #home-more-icon { transition: transform 0.3s var(--ease); }
+        .home-more-grid {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            pointer-events: none;
+            transition: max-height 0.4s var(--ease), opacity 0.3s var(--ease), margin-top 0.4s var(--ease);
+            margin-top: 0;
+        }
+        .home-more-grid--open {
+            max-height: 220px;
+            opacity: 1;
+            overflow-y: auto;
+            pointer-events: auto;
+            margin-top: 0.625rem;
+        }
+
+        .shine-sweep { position: relative; overflow: hidden; }
+        .shine-sweep::after {
+            content: "";
+            position: absolute; inset: 0;
+            background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,0.10) 50%, transparent 60%);
+            transform: translateX(-120%);
+            transition: transform 0.7s var(--ease);
+            pointer-events: none;
+        }
+        .shine-sweep:hover::after { transform: translateX(120%); }
+
+        .nav-blur {
+            background: rgba(7, 7, 7, 0.94);
+            border-top: 1px solid var(--hair);
+            box-shadow: none;
+        }
+        .nav-icon-wrapper {
+            transition: transform 0.5s var(--ease), opacity 0.5s var(--ease);
+        }
+        .artist-photo { width:120px; height:120px; border-radius:50%; object-fit:cover; border:1px solid var(--hair-strong); box-shadow:none; background:var(--surface); filter: grayscale(1); }
+        @keyframes fadeUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+        .animate-slide-up{animation:fadeUp 0.3s var(--ease) forwards}
+
+
+        /* ===== SPLASH SCREEN — CINEMATIC REVEAL ===== */
+        #splash-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: radial-gradient(circle at 50% 42%, #101011 0%, var(--void) 72%);
+            opacity: 1;
+            transition: opacity 0.55s var(--ease), transform 0.55s var(--ease), visibility 0.55s;
+        }
+        #splash-screen.hide {
+            opacity: 0;
+            transform: scale(1.04);
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .splash-stage {
+            position: relative;
+            width: 210px; height: 210px;
+            display: flex; align-items: center; justify-content: center;
+            animation: splashStageIn 0.7s var(--ease) both;
+        }
+        @keyframes splashStageIn { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+
+        .splash-ring {
+            position: absolute; inset: 0;
+            border-radius: 50%;
+            border: 1px solid var(--hair);
+            border-top-color: var(--ink);
+            animation: splashRingSpin 1.8s linear infinite, splashRingFade 0.6s var(--ease) both;
+        }
+        @keyframes splashRingSpin { to { transform: rotate(360deg); } }
+        @keyframes splashRingFade { from { opacity:0; } to { opacity:1; } }
+
+        .splash-logo-wrap {
+            position: relative;
+            width: 130px; height: 130px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1px solid var(--hair-strong);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            clip-path: circle(0% at 50% 50%);
+            animation: splashIris 0.7s var(--ease) 0.15s both;
+        }
+        @keyframes splashIris { to { clip-path: circle(55% at 50% 50%); } }
+        .splash-logo-wrap img {
+            width: 85%; height: 85%;
+            object-fit: cover;
+            border-radius: 50%;
+            filter: grayscale(1);
+        }
+
+        .splash-title { margin-top: 30px; font-weight: 600; font-size: 2.05rem; letter-spacing: -0.01em; display: flex; }
+        .splash-title span {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(60%) rotate(4deg);
+            animation: splashLetter 0.6s var(--ease) both;
+            animation-delay: calc(0.55s + (var(--i) * 0.045s));
+        }
+        @keyframes splashLetter { to { opacity:1; transform: translateY(0) rotate(0); } }
+
+        .splash-rule {
+            margin-top: 18px;
+            width: 0; height: 1px;
+            background: var(--hair-strong);
+            animation: splashRule 0.6s var(--ease) 1.05s both;
+        }
+        @keyframes splashRule { to { width: 64px; } }
+
+        .splash-sub {
+            margin-top: 12px; font-size: .68rem; color: var(--ink-dim); letter-spacing: .24em; text-transform: uppercase;
+            font-family: var(--font-ui);
+            opacity: 0;
+            animation: splashFade 0.5s var(--ease) 1.25s both;
+        }
+        @keyframes splashFade { to { opacity: .85; } }
+
+        .splash-bar { margin-top: 22px; width: 90px; height: 1px; border-radius: 1px; background: var(--hair); overflow: hidden; opacity: 0; animation: splashFade 0.5s var(--ease) 1.4s both; }
+        .splash-bar i { display: block; height: 100%; width: 30%; background: var(--ink); animation: splashBar 1.6s ease-in-out infinite; }
+        @keyframes splashBar { 0% { transform: translateX(-150%); } 100% { transform: translateX(400%); } }
+
+        /* High-Performance Blurred Artwork Background for Player & Lyrics */
+        .player-bg-container {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+            background-color: var(--void);
+            will-change: transform;
+            transform: translateZ(0);
+        }
+
+        .player-bg-blur-img {
+            position: absolute;
+            inset: -10%;
+            width: 120%;
+            height: 120%;
+            object-fit: cover;
+            filter: grayscale(1) blur(28px) brightness(0.55) contrast(1.05);
+            -webkit-filter: grayscale(1) blur(28px) brightness(0.55) contrast(1.05);
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+            will-change: opacity, transform;
+            transform: translateZ(0);
+        }
+
+        .player-bg-glow {
+            position: absolute;
+            inset: -25%;
+            z-index: 0;
+            opacity: 0;
+            mix-blend-mode: overlay;
+            filter: blur(40px);
+            background-repeat: no-repeat;
+            background-image:
+                radial-gradient(circle at 22% 28%, rgba(255,255,255,0.55) 0%, transparent 60%),
+                radial-gradient(circle at 78% 35%, rgba(255,255,255,0.4) 0%, transparent 60%),
+                radial-gradient(circle at 42% 82%, rgba(255,255,255,0.35) 0%, transparent 60%);
+            background-size: 140% 140%;
+            animation: glowDrift 12s ease-in-out infinite;
+            will-change: transform;
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+        }
+
+        @keyframes glowDrift {
+            0%   { transform: translate3d(0%, 0%, 0) scale(1) rotate(0deg); }
+            20%  { transform: translate3d(6%, -8%, 0) scale(1.14) rotate(9deg); }
+            40%  { transform: translate3d(-9%, 4%, 0) scale(0.92) rotate(-7deg); }
+            60%  { transform: translate3d(5%, 9%, 0) scale(1.1) rotate(11deg); }
+            80%  { transform: translate3d(-6%, -6%, 0) scale(0.95) rotate(-9deg); }
+            100% { transform: translate3d(0%, 0%, 0) scale(1) rotate(0deg); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .player-bg-glow { animation: none; }
+            .splash-ring { animation: splashRingFade 0.6s var(--ease) both; }
+        }
+
+        .player-bg-vignette {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            background: linear-gradient(to bottom, rgba(7,7,7,0.55) 0%, rgba(7,7,7,0.2) 45%, rgba(7,7,7,0.82) 100%);
+        }
+
+        /* Extra Dark & Heavy Blur Background for Lyrics Overlay */
+        #lyrics-overlay {
+            background-color: var(--void) !important;
+        }
+        #lyrics-overlay .player-bg-blur-img {
+            filter: grayscale(1) blur(70px) brightness(0.15) contrast(1.1) !important;
+            -webkit-filter: grayscale(1) blur(70px) brightness(0.15) contrast(1.1) !important;
+            opacity: 0.6 !important;
+        }
+        #lyrics-overlay .player-bg-vignette {
+            background: radial-gradient(circle at center, rgba(4,4,4,0.85) 0%, rgba(4,4,4,0.97) 100%),
+                        linear-gradient(to bottom, rgba(4,4,4,0.9) 0%, rgba(4,4,4,0.8) 50%, rgba(4,4,4,0.98) 100%) !important;
+        }
+
+        /* Premium Lyric Highlighting Styling */
+        #lyrics-scroll-container {
+            -webkit-overflow-scrolling: touch;
+        }
+        .lyric-line {
+            transition: opacity 0.4s var(--ease), transform 0.4s var(--ease), color 0.4s var(--ease);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.32);
+            opacity: 0.4;
+            padding: 10px 0;
+            line-height: 1.3;
+            letter-spacing: -0.01em;
+            will-change: opacity, color, transform;
+            cursor: pointer;
+            text-align: left;
+            transform-origin: left center;
+        }
+        @media (min-width: 768px) {
+            .lyric-line {
+                font-size: 2.25rem;
+                padding: 14px 0;
+                line-height: 1.25;
+            }
+        }
+        .lyric-line.active-lyric {
+            opacity: 1 !important;
+            color: var(--ink) !important;
+            transform: scale(1.04) translateX(2px);
+        }
+        .lyric-line.past-lyric {
+            opacity: 0.25 !important;
+            color: rgba(255, 255, 255, 0.35) !important;
+            transform: scale(0.98);
+        }
+        .lyric-translation {
+            display: block;
+            font-size: 0.56em;
+            font-weight: 500;
+            opacity: 0.7;
+            margin-top: 4px;
+            letter-spacing: 0;
+            line-height: 1.35;
+            color: inherit;
+            font-family: var(--font-ui);
+        }
+        .inline-lyric-line .lyric-translation {
+            font-size: 0.78em;
+            margin-top: 2px;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+
+        /* Inline Lyric Highlighting for FullPlayer Compact Box */
+        .inline-lyric-line {
+            transition: opacity 0.25s ease, color 0.25s ease;
+            font-size: 0.92rem;
+            line-height: 1.4;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.4);
+            opacity: 0.5;
+            padding: 5px 0;
+            letter-spacing: -0.01em;
+            cursor: pointer;
+            text-align: left;
+            word-break: break-word;
+        }
+        .inline-lyric-line.active-lyric {
+            opacity: 1 !important;
+            color: var(--ink) !important;
+            font-weight: 800 !important;
+        }
+        .inline-lyric-line.past-lyric {
+            opacity: 0.3 !important;
+            color: rgba(255, 255, 255, 0.35) !important;
+        }
+
+        /* Flat Equalizer & Slider styling */
+        .eq-slider {
+            -webkit-appearance: none;
+            width: 6px;
+            height: 150px;
+            background: var(--bg-color);
+            box-shadow: var(--nm-shadow-inset-sm);
+            border-radius: 3px;
+            outline: none;
+            writing-mode: bt-lr; /* IE */
+            -webkit-appearance: slider-vertical; /* WebKit */
+        }
+        .eq-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--ink);
+            box-shadow: none;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.15s var(--ease);
+        }
+        .eq-slider::-webkit-slider-thumb:active {
+            transform: scale(1.2);
+        }
+
+
+
+        /* Animated Bouncing Equalizer Bars for Active Track */
+        @keyframes eqBounce1 { 0%, 100% { height: 3px; } 50% { height: 20px; } }
+        @keyframes eqBounce2 { 0%, 100% { height: 18px; } 50% { height: 4px; } }
+        @keyframes eqBounce3 { 0%, 100% { height: 5px; } 50% { height: 24px; } }
+        @keyframes eqBounce4 { 0%, 100% { height: 22px; } 50% { height: 6px; } }
+        @keyframes eqBounce5 { 0%, 100% { height: 4px; } 50% { height: 16px; } }
+        @keyframes eqBounce6 { 0%, 100% { height: 26px; } 50% { height: 8px; } }
+
+        .animate-eq-1 { animation: eqBounce1 0.45s ease-in-out infinite; }
+        .animate-eq-2 { animation: eqBounce2 0.65s ease-in-out infinite; }
+        .animate-eq-3 { animation: eqBounce3 0.50s ease-in-out infinite; }
+        .animate-eq-4 { animation: eqBounce4 0.80s ease-in-out infinite; }
+        .animate-eq-5 { animation: eqBounce5 0.60s ease-in-out infinite; }
+        .animate-eq-6 { animation: eqBounce6 0.70s ease-in-out infinite; }
+
+        /* Equalizer live-animated bar visualizer */
+        .eq-bar {
+            width: 4px;
+            height: 10px;
+            background: var(--ink);
+            opacity: .9;
+            border-radius: 1px;
+            transition: height 0.1s ease-out;
+        }
+
+        /* Responsive Bottom Navigation Bar Styles */
+        .nav-blur {
+            background: rgba(7, 7, 7, 0.94);
+            border-top: 1px solid var(--hair);
+            box-shadow: none;
+        }
+        .nav-icon-wrapper {
+            transition: transform 0.5s var(--ease), opacity 0.5s var(--ease);
+        }
+
+        /* Page Slide Animations */
+        @keyframes slideInRight {
+            0% { transform: translateX(30px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideInLeft {
+            0% { transform: translateX(-30px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        .animate-slide-right {
+            animation: slideInRight 0.4s var(--ease) forwards;
+        }
+        .animate-slide-left {
+            animation: slideInLeft 0.4s var(--ease) forwards;
+        }
+
+        /* Search Results & Cards Entrance Animations */
+        @keyframes cardUp {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes cardLeft {
+            0% { opacity: 0; transform: translateX(-10px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        .animate-card-up {
+            animation: cardUp 0.45s var(--ease) both;
+        }
+        .animate-card-left {
+            animation: cardLeft 0.45s var(--ease) both;
+        }
+        .transition-all, .transition, .transition-colors, .transition-opacity, .transition-transform {
+            transition-duration: 350ms !important;
+            transition-timing-function: var(--ease) !important;
+        }
+    </style>
+</head>
+<body class="h-[100dvh] w-full bg-transparent text-white overflow-hidden flex flex-col">
+    <div class="app-bg"></div>
+
+    <div id="splash-screen">
+        <div class="splash-stage">
+            <span class="splash-ring"></span>
+            <div class="splash-logo-wrap"><img src="/logo.png" alt="logo" onerror="this.style.display='none'" /></div>
+        </div>
+        <h1 class="splash-title chrome-text" aria-label="AustinPlay"><span style="--i:0">A</span><span style="--i:1">u</span><span style="--i:2">s</span><span style="--i:3">t</span><span style="--i:4">i</span><span style="--i:5">n</span><span style="--i:6">P</span><span style="--i:7">l</span><span style="--i:8">a</span><span style="--i:9">y</span></h1>
+        <span class="splash-rule"></span>
+        <div class="splash-sub">Menyiapkan musikmu</div>
+        <div class="splash-bar"><i></i></div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto overflow-x-hidden pb-[140px] hide-scrollbar" id="main-area">
+        <div id="view-home"></div>
+        <div id="view-search" style="display:none;"></div>
+        <div id="view-library" style="display:none;"></div>
+        <div id="view-offline" style="display:none;"></div>
+        <div id="view-liked" style="display:none;"></div>
+        <div id="view-dev" style="display:none;"></div>
+    </div>
+
+    <!-- PWA Offline Banner -->
+    <div id="pwa-offline-banner" class="hidden fixed top-3 left-1/2 -translate-x-1/2 z-[500] bg-white text-black font-bold text-xs px-4 py-1.5 rounded-full shadow-2xl backdrop-blur-md flex items-center gap-2 border border-white/50">
+        <i data-lucide="wifi-off" class="w-4 h-4"></i>
+        <span id="pwa-offline-text">Mode Offline (PWA) - Memutar data tersimpan</span>
+    </div>
+
+    <div id="nav-container"></div>
+    <div id="mini-container"></div>
+    <div id="full-container"></div>
+    <div id="lyrics-container"></div>
+    <div id="artist-container"></div>
+    <div id="yt-player" style="position:absolute;top:-9999px;left:-9999px;width:1px;height:1px;"></div>
+    <audio id="audio-player" preload="auto" style="display:none;"></audio>
+
+    <script src="/player.js?v=16"></script>
+    <script src="/home.js?v=16"></script>
+    <script src="/search.js?v=16"></script>
+    <script src="/liked.js?v=16"></script>
+    <script src="/library.js?v=16"></script>
+    <script src="/profile.js?v=16"></script>
+    <script src="/miniplayer.js?v=16"></script>
+    <script src="/fullplayer.js?v=16"></script>
+    <script src="/artist.js?v=16"></script>
+    <script src="/album.js?v=16"></script>
+    <script src="/app.js?v=16"></script>
+    <script>(function () {
+  document.addEventListener('visibilitychange', function () {
+    document.documentElement.classList.toggle('tab-hidden', document.hidden);
+  });
+  // Failsafe timer to hide splash screen if anything delays
+  setTimeout(function() {
+      var sp = document.getElementById('splash-screen');
+      if (sp && !sp.classList.contains('hide')) {
+          sp.classList.add('hide');
+          setTimeout(function() { if (sp && sp.parentNode) sp.parentNode.removeChild(sp); }, 700);
+      }
+  }, 2800);
+})();</script>
+</body>
+
+</html>
