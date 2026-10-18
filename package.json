@@ -1,16 +1,10 @@
 {
-  "name": "austinplay",
+  "name": "austinplay-frontend",
   "private": true,
-  "version": "1.0.0",
-  "description": "AustinPlay - Web Music Player",
+  "version": "2.0.0",
+  "description": "AustinPlay - frontend statis (Vercel). Backend API ada di folder backend/ (Pterodactyl).",
   "scripts": {
-    "lint": "node --check public/app.js",
-    "dev": "node server.js",
     "build": "echo 'No build required'",
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "axios": "^1.18.1",
-    "express": "^5.2.1"
+    "lint": "node --check public/app.js"
   }
 }

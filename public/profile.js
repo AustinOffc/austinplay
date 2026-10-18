@@ -14,6 +14,8 @@ var Profile = {
             <h1 class="text-3xl font-black chrome-text mb-1">AustinPlay</h1>
             <p class="text-[#b3b3b3] text-sm mb-6">Streaming Musik YouTube dengan Lirik</p>
             
+            <div id="sync-card" class="glass rounded-2xl p-5 max-w-sm mx-auto space-y-3 text-left mb-6"></div>
+
             <div class="glass rounded-2xl p-5 max-w-sm mx-auto space-y-3 text-left mb-6">
                 <h3 class="text-white font-bold text-sm uppercase tracking-wider mb-2 flex items-center gap-2">
                     <i data-lucide="smartphone" class="w-4 h-4 text-white/70"></i> Aplikasi & PWA
@@ -63,6 +65,7 @@ var Profile = {
                 <i data-lucide="message-circle" class="w-5 h-5"></i> Gabung Channel WhatsApp
             </a>
         </div>`;
+        if (typeof Sync !== 'undefined' && Sync.renderCard) Sync.renderCard();
         lucide.createIcons();
     }
 };

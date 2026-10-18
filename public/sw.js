@@ -1,5 +1,5 @@
-const CACHE_STATIC_NAME = 'austinplay-static-v6';
-const CACHE_DATA_NAME = 'austinplay-api-v6';
+const CACHE_STATIC_NAME = 'austinplay-static-v8';
+const CACHE_DATA_NAME = 'austinplay-api-v8';
 
 const STATIC_ASSETS = [
   '/',
@@ -8,6 +8,8 @@ const STATIC_ASSETS = [
   '/logo.png',
   '/banner.png',
   '/app.js',
+  '/config.js',
+  '/sync.js',
   '/player.js',
   '/fullplayer.js',
   '/miniplayer.js',
@@ -65,6 +67,11 @@ self.addEventListener('fetch', (event) => {
 
   // Ignore non-GET requests or chrome-extension URLs
   if (request.method !== 'GET' || !url.protocol.startsWith('http')) {
+    return;
+  }
+
+  // Jangan disentuh service worker: akun/sinkronisasi (data pribadi, header Authorization) dan stream audio (Range).
+  if (/^\/api\/(auth|sync|proxy-audio)/.test(url.pathname)) {
     return;
   }
 
