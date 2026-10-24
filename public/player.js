@@ -991,7 +991,7 @@ async function fetchAudioAndPlay(track,resumeAt,forceFresh){
             for(var attempt=0;attempt<4&&!audioUrl;attempt++){
                 if(attempt>0){await new Promise(function(res){setTimeout(res,1200*attempt);});if(S.ct!==track)return;}
                 try{
-                    var r=await fetch(API.ytplay,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:ytUrl})});
+                    var r=await fetch(API.ytplay,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:ytUrl,refresh:!!forceFresh})});
                     var d=await r.json().catch(function(){return null;});
                     if(d&&d.status&&d.result&&d.result.download&&d.result.download.audio){
                         audioUrl = d.result.download.audio;
