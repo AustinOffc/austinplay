@@ -103,6 +103,7 @@ AU.addEventListener('playing',function(){S.il=false;UB();});
 AU.addEventListener('ended',function(){ST();if(typeof handleTrackEnded==='function'&&handleTrackEnded())return;if(S.rm==='one'){AU.currentTime=0;AU.play().catch(function(){});}else if(S.autoNext){NX();}else{S.ip=false;UB();}});
 AU.addEventListener('error',function(){
     if(!AU.getAttribute('src'))return;
+    try{console.warn('[audio] error code',AU.error&&AU.error.code,'stage',fbState&&fbState.stage,AU.currentSrc);}catch(e){}
     // Sumber gagal dimuat -> coba jalur cadangan (direct -> proxy -> URL baru) sebelum menyerah.
     if(typeof advanceSource==='function'&&fbState&&S.ct===fbState.track){advanceSource();return;}
     S.il=false;S.ip=false;UB();
@@ -985,14 +986,24 @@ async function fetchAudioAndPlay(track,resumeAt,forceFresh){
                 return;
             }
             var ytUrl=track.ytUrl||('https://youtube.com/watch?v='+vid);
-            var r=await fetch(API.ytplay,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:ytUrl})});
-            var d=await r.json().catch(function(){return null;});
-            if(d&&d.status&&d.result&&d.result.download&&d.result.download.audio){
-                audioUrl = d.result.download.audio;
-                audioUrlCache[vid] = audioUrl;
-                fresh = true;
-                savePwaCaches();
+            // Server ekstraksi kadang gagal sesaat (provider timeout/canceled) -> coba ulang otomatis.
+            var lastErr='';
+            for(var attempt=0;attempt<4&&!audioUrl;attempt++){
+                if(attempt>0){await new Promise(function(res){setTimeout(res,1200*attempt);});if(S.ct!==track)return;}
+                try{
+                    var r=await fetch(API.ytplay,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:ytUrl})});
+                    var d=await r.json().catch(function(){return null;});
+                    if(d&&d.status&&d.result&&d.result.download&&d.result.download.audio){
+                        audioUrl = d.result.download.audio;
+                        audioUrlCache[vid] = audioUrl;
+                        fresh = true;
+                        savePwaCaches();
+                    }else{
+                        lastErr='HTTP '+r.status+' '+((d&&(d.error||d.message))||'');
+                    }
+                }catch(netErr){lastErr='network: '+(netErr&&netErr.message);}
             }
+            if(!audioUrl){console.warn('[ytplay] gagal setelah 4x percobaan:',lastErr);}
         }
         if(S.ct!==track)return;
         if(audioUrl){
@@ -1001,7 +1012,7 @@ async function fetchAudioAndPlay(track,resumeAt,forceFresh){
             startSource((typeof audioCtx !== 'undefined' && audioCtx) ? 1 : 0);
         }else{
             S.il=false;S.ip=false;UB();
-            if(typeof showToast === 'function') showToast('Gagal memuat audio lagu ini');
+            if(typeof showToast === 'function') showToast('Server gagal mengambil audio lagu ini. Tap Play untuk coba lagi');
         }
     }catch(e){
         if(S.ct===track){S.il=false;S.ip=false;UB();}
