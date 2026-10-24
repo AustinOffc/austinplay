@@ -101,7 +101,14 @@ AU.addEventListener('pause',function(){if(!AU.ended){S.ip=false;UB();ST();}});
 AU.addEventListener('waiting',function(){S.il=true;UB();});
 AU.addEventListener('playing',function(){S.il=false;UB();});
 AU.addEventListener('ended',function(){ST();if(typeof handleTrackEnded==='function'&&handleTrackEnded())return;if(S.rm==='one'){AU.currentTime=0;AU.play().catch(function(){});}else if(S.autoNext){NX();}else{S.ip=false;UB();}});
-AU.addEventListener('error',function(){if(AU.src){S.il=false;S.ip=false;UB();}});
+AU.addEventListener('error',function(){
+    if(!AU.getAttribute('src'))return;
+    // Sumber gagal dimuat -> coba jalur cadangan (direct -> proxy -> URL baru) sebelum menyerah.
+    if(typeof advanceSource==='function'&&fbState&&S.ct===fbState.track){advanceSource();return;}
+    S.il=false;S.ip=false;UB();
+});
+AU.addEventListener('loadedmetadata',function(){if(fbState)clearTimeout(fbState.timer);});
+AU.addEventListener('canplay',function(){if(fbState)clearTimeout(fbState.timer);});
 
 // ---- MEDIA SESSION (kontrol next/prev/play/pause di notifikasi & lockscreen) ----
 if('mediaSession' in navigator){
@@ -889,21 +896,88 @@ function PK(s,i){
     loadTrack(S.ct);
 }
 
-function loadTrack(track,resumeAt){
+function loadTrack(track,resumeAt,forceFresh){
     if(!track)return;
     hasPrefetchedNext = false;
     isPreloadingNext = false;
     ST();
+    if(fbState){clearTimeout(fbState.timer);}
+    fbState=null;
     try{AU.pause();}catch(e){}
     updateMediaSessionMetadata(track);
-    fetchAudioAndPlay(track,resumeAt);
+    fetchAudioAndPlay(track,resumeAt,forceFresh);
 }
 
-async function fetchAudioAndPlay(track,resumeAt){
+// Status sumber audio untuk lagu yang sedang dimuat (fallback bertahap).
+// stage 0 = URL langsung, stage 1 = lewat /api/proxy-audio, lalu minta URL baru (cache bisa kadaluarsa).
+var fbState=null;
+var SRC_TIMEOUT_MS=12000;
+
+function buildSrc(raw,stage){
+    return stage===0?raw:apiUrl('/api/proxy-audio?url='+encodeURIComponent(raw));
+}
+
+function startSource(stage){
+    var f=fbState;if(!f)return;
+    f.stage=stage;
+    clearTimeout(f.timer);
+    if(stage===0){AU.removeAttribute('crossorigin');}
+    AU.src=buildSrc(f.raw,stage);
+    if(f.resumeAt){
+        var target=f.resumeAt;
+        var onMeta=function(){try{AU.currentTime=target;}catch(e){}AU.removeEventListener('loadedmetadata',onMeta);};
+        AU.addEventListener('loadedmetadata',onMeta);
+    }
+    // Kalau sumber macet (tidak error tapi tidak pernah load), anggap gagal.
+    f.timer=setTimeout(function(){
+        if(fbState===f&&S.ct===f.track&&AU.readyState<1)advanceSource();
+    },SRC_TIMEOUT_MS);
+    var p=AU.play();
+    if(p!==undefined&&p.then){
+        p.then(function(){
+            if(fbState!==f)return;
+            S.il=false;S.ip=true;UB();
+        }).catch(function(err){
+            if(fbState!==f)return;
+            var name=err&&err.name;
+            if(name==='AbortError')return; // src diganti / load baru, bukan error
+            if(name==='NotAllowedError'){
+                // Autoplay diblokir browser: biarkan siap diputar, user tinggal tap Play.
+                S.il=false;S.ip=false;UB();
+                return;
+            }
+            // NotSupportedError dll. -> sumber tidak bisa diputar
+            advanceSource();
+        });
+    }else{
+        S.il=false;UB();
+    }
+}
+
+function advanceSource(){
+    var f=fbState;
+    if(!f||S.ct!==f.track)return;
+    clearTimeout(f.timer);
+    if(f.stage===0){startSource(1);return;}
+    if(!f.fresh){
+        // URL dari cache mungkin sudah kadaluarsa -> buang & ambil URL baru dari server.
+        try{delete audioUrlCache[f.vid];savePwaCaches();}catch(e){}
+        var t=f.track,r=f.resumeAt;
+        fbState=null;
+        fetchAudioAndPlay(t,r,true);
+        return;
+    }
+    f.failed=true;
+    S.il=false;S.ip=false;UB();
+    if(typeof showToast==='function')showToast('Gagal memutar lagu ini. Tap Play untuk coba lagi');
+}
+
+async function fetchAudioAndPlay(track,resumeAt,forceFresh){
     S.il=true;UB();
     var vid = track.videoId || track.id;
     try{
-        var audioUrl = audioUrlCache[vid];
+        var audioUrl = forceFresh ? null : audioUrlCache[vid];
+        var fresh = false;
         if (!audioUrl) {
             if (!navigator.onLine) {
                 S.il = false; S.ip = false; UB();
@@ -912,41 +986,19 @@ async function fetchAudioAndPlay(track,resumeAt){
             }
             var ytUrl=track.ytUrl||('https://youtube.com/watch?v='+vid);
             var r=await fetch(API.ytplay,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:ytUrl})});
-            var d=await r.json();
+            var d=await r.json().catch(function(){return null;});
             if(d&&d.status&&d.result&&d.result.download&&d.result.download.audio){
                 audioUrl = d.result.download.audio;
                 audioUrlCache[vid] = audioUrl;
+                fresh = true;
                 savePwaCaches();
             }
         }
         if(S.ct!==track)return;
         if(audioUrl){
-            if (typeof audioCtx !== 'undefined' && audioCtx) {
-                AU.src = apiUrl('/api/proxy-audio?url=' + encodeURIComponent(audioUrl));
-            } else {
-                AU.removeAttribute('crossorigin');
-                AU.src = audioUrl;
-            }
-            if(resumeAt){
-                var onMeta=function(){AU.currentTime=resumeAt;AU.removeEventListener('loadedmetadata',onMeta);};
-                AU.addEventListener('loadedmetadata',onMeta);
-            }
-            var p = AU.play();
-            if(p !== undefined && p.then){
-                p.then(function(){
-                    S.il = false;
-                    S.ip = true;
-                    UB();
-                }).catch(function(err){
-                    // Browser blocked autoplay or requires user interaction
-                    S.il = false;
-                    S.ip = false;
-                    UB();
-                });
-            } else {
-                S.il = false;
-                UB();
-            }
+            fbState={track:track,vid:vid,raw:audioUrl,fresh:fresh,resumeAt:resumeAt,stage:0,timer:null,failed:false};
+            // Kalau Equalizer (Web Audio) aktif, wajib lewat proxy supaya CORS aman.
+            startSource((typeof audioCtx !== 'undefined' && audioCtx) ? 1 : 0);
         }else{
             S.il=false;S.ip=false;UB();
             if(typeof showToast === 'function') showToast('Gagal memuat audio lagu ini');
@@ -958,8 +1010,9 @@ async function fetchAudioAndPlay(track,resumeAt){
 
 function TP(){
     if(!S.ct)return;
-    if(!AU.src){
-        loadTrack(S.ct);
+    // Belum ada sumber / sumber rusak / sudah gagal semua jalur -> muat ulang dengan URL baru.
+    if(!AU.getAttribute('src')||AU.error||(fbState&&fbState.failed)||AU.networkState===AU.NETWORK_NO_SOURCE){
+        loadTrack(S.ct,0,true);
         return;
     }
     if(AU.paused){
@@ -970,10 +1023,11 @@ function TP(){
                 S.il = false;
                 S.ip = true;
                 UB();
-            }).catch(function(){
+            }).catch(function(err){
                 S.il = false;
                 S.ip = false;
                 UB();
+                if(err&&err.name==='NotSupportedError')loadTrack(S.ct,0,true);
             });
         }
     } else {
