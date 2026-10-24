@@ -310,7 +310,7 @@ async function triggerPreloadNextTrack(){
                 var rawAudioUrl = d.result.download.audio;
                 audioUrlCache[nextVid] = rawAudioUrl;
 
-                var srcUrl = (typeof audioCtx !== 'undefined' && audioCtx) ? apiUrl('/api/proxy-audio?url=' + encodeURIComponent(rawAudioUrl)) : rawAudioUrl;
+                var srcUrl = ((typeof audioCtx !== 'undefined' && audioCtx) || rawAudioUrl.indexOf('#via-proxy') > -1) ? apiUrl('/api/proxy-audio?url=' + encodeURIComponent(rawAudioUrl)) : rawAudioUrl;
                 var preAudio = new Audio();
                 preAudio.preload = 'auto';
                 preAudio.src = srcUrl;
@@ -1009,7 +1009,7 @@ async function fetchAudioAndPlay(track,resumeAt,forceFresh){
         if(audioUrl){
             fbState={track:track,vid:vid,raw:audioUrl,fresh:fresh,resumeAt:resumeAt,stage:0,timer:null,failed:false};
             // Kalau Equalizer (Web Audio) aktif, wajib lewat proxy supaya CORS aman.
-            startSource((typeof audioCtx !== 'undefined' && audioCtx) ? 1 : 0);
+            startSource(((typeof audioCtx !== 'undefined' && audioCtx) || audioUrl.indexOf('#via-proxy') > -1) ? 1 : 0);
         }else{
             S.il=false;S.ip=false;UB();
             if(typeof showToast === 'function') showToast('Server gagal mengambil audio lagu ini. Tap Play untuk coba lagi');
