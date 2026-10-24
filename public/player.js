@@ -1026,6 +1026,12 @@ function TP(){
         loadTrack(S.ct,0,true);
         return;
     }
+    // Sumber ada tapi belum ada data sama sekali & tidak sedang loading (macet / URL cache basi):
+    // tap Play = muat ulang dengan URL baru (tap adalah gesture user, jadi autoplay diizinkan).
+    if(AU.paused&&AU.readyState<2&&!S.il){
+        loadTrack(S.ct,0,true);
+        return;
+    }
     if(AU.paused){
         S.il=true;UB();
         var p = AU.play();
