@@ -173,7 +173,7 @@ var Library={
         const h = gid('library-header');
         if (!h) return;
         if (c && c.scrollTop > 50) {
-            h.style.background = 'rgba(5, 5, 7, 0.9)';
+            h.style.background = 'rgba(6, 6, 8, 0.92)';
         } else {
             h.style.background = 'transparent';
         }
@@ -189,7 +189,7 @@ var Library={
         if(!modal) {
             modal = document.createElement('div');
             modal.id = 'library-modal';
-            modal.className = 'fixed inset-0 bg-[#050507] flex flex-col z-[100]';
+            modal.className = 'fixed inset-0 bg-[#060608] flex flex-col z-[100]';
             modal.style.animation = 'slideUp 0.3s ease-out forwards';
             document.body.appendChild(modal);
         }
@@ -208,7 +208,7 @@ var Library={
             <div class="flex-1 overflow-y-auto hide-scrollbar pb-36 relative" id="library-content" onscroll="Library.handleScroll()">
                 <div class="relative w-full aspect-square md:aspect-video max-h-[50vh] overflow-hidden -mt-20 mb-6">
                     <img src="${pl.image||(pl.songs.length>0?pl.songs[0].cover:FI)}" class="w-full h-full object-cover" onerror="this.src='${FI}'" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#050507] via-[#050507]/60 to-transparent"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#060608] via-[#060608]/60 to-transparent"></div>
                     <div class="absolute bottom-6 left-6 right-6 flex flex-col justify-end items-center text-center z-10">
                         <img src="${pl.image||(pl.songs.length>0?pl.songs[0].cover:FI)}" class="w-32 h-32 md:w-48 md:h-48 rounded-xl object-cover border border-white/10 mb-4" onerror="this.src='${FI}'" />
                         <div>

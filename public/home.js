@@ -49,9 +49,9 @@ var Home = {
         var moreActive = moreCats.some(function(c) { return c.name === Home.activeCategory; });
 
         gid('view-home').innerHTML = `
-        <div class="ap-hero">
+        <div class="ap-top">
             <div class="flex items-center gap-2.5">
-                <h1 class="sr-only">AustinPlay</h1>
+                <h1 class="ap-title text-3xl font-bold text-white mr-auto">AustinPlay</h1>
                 <div class="flex items-center gap-2.5">
                     <button onclick="App.switch('search')" class="w-10 h-10 rounded-2xl bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/90 hover:text-white hover:bg-black/60 active:scale-95 transition-all shadow-lg" title="Cari">
                         <i data-lucide="search" class="w-5 h-5"></i>

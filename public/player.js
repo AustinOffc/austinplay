@@ -2311,7 +2311,7 @@ function downloadShareCard() {
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 600, 800);
     } else {
-        grad.addColorStop(0, '#1a1b22');
+        grad.addColorStop(0, '#060608');
         grad.addColorStop(1, '#0f1014');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 600, 800);

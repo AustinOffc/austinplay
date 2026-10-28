@@ -6,7 +6,7 @@ var Album = {
             document.body.appendChild(div);
         }
         gid('album-container').innerHTML = `
-        <div id="album-modal" class="fixed inset-0 bg-[#050507] flex flex-col z-[100]" style="display:none; animation: slideUp 0.3s ease-out forwards;">
+        <div id="album-modal" class="fixed inset-0 bg-[#060608] flex flex-col z-[100]" style="display:none; animation: slideUp 0.3s ease-out forwards;">
             <div class="flex items-center justify-between p-4 pt-safe bg-transparent absolute top-0 left-0 w-full z-[100]" id="album-header">
                 <button onclick="Album.close()" class="glass glass-hover rounded-full text-white p-3 active:scale-90 shadow-md bg-black/80 cursor-pointer"><i data-lucide="arrow-left" class="w-6 h-6"></i></button>
                 <button id="album-top-share-btn" onclick="Album.share(Album.currentAlbumId)" class="glass glass-hover rounded-full text-white p-3 active:scale-90 shadow-md bg-black/80 cursor-pointer" title="Bagikan Album"><i data-lucide="share-2" class="w-5 h-5"></i></button>
@@ -24,7 +24,7 @@ var Album = {
         const h = gid('album-header');
         if (!h) return;
         if (c.scrollTop > 50) {
-            h.style.background = 'rgba(5, 5, 7, 0.9)';
+            h.style.background = 'rgba(6, 6, 8, 0.92)';
         } else {
             h.style.background = 'transparent';
         }
@@ -71,12 +71,11 @@ var Album = {
             let html = `
             <div class="relative w-full aspect-square md:aspect-video max-h-[50vh] overflow-hidden -mt-20 mb-6">
                 <img src="${im}" class="w-full h-full object-cover" />
-                <div class="absolute inset-0 bg-gradient-to-t from-[#050507] via-[#050507]/60 to-transparent"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-[#060608] via-[#060608]/60 to-transparent"></div>
                 
-                <div class="absolute bottom-6 left-6 right-6 flex flex-col justify-end items-center text-center z-10">
-                    <img src="${im}" class="w-32 h-32 md:w-48 md:h-48 rounded-xl object-cover border border-white/10 mb-4" onerror="this.src='${FI}'" />
+                <div class="absolute bottom-6 left-6 right-6 flex flex-col md:flex-row md:items-end justify-end items-start text-left gap-4 z-10">
+                    <img src="${im}" class="w-32 h-32 md:w-48 md:h-48 rounded-xl object-cover border border-white/10 shrink-0" onerror="this.src='${FI}'" />
                     <div>
-                        <p class="text-[10px] font-bold text-white uppercase tracking-[0.2em] mb-1">ALBUM / PLAYLIST</p>
                         <h1 class="text-3xl md:text-5xl font-black text-white mb-2 leading-tight drop-line-clamp-2">${es(a.title)}</h1>
                         ${a.description ? `<p class="text-white text-xs md:text-sm line-clamp-2">${es(a.description)}</p>` : ''}
                     </div>

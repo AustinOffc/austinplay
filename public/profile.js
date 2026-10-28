@@ -3,11 +3,9 @@ var Profile = {
         var el = gid('view-dev');
         if(!el) return;
         el.innerHTML = `
-        <div class="ap-banner">
-            <h1 class="text-3xl font-black text-white tracking-tight drop-shadow-md">Profil</h1>
-        </div>
-        <div class="pt-6 px-4 text-center">
-            <div class="relative w-24 h-24 rounded-full mx-auto mb-6 glass-strong shine-sweep flex items-center justify-center overflow-hidden shadow-black/50">
+        <div class="ap-profile-cover" role="img" aria-label="Banner AustinPlay"></div>
+        <div class="px-4 text-center">
+            <div class="ap-avatar relative w-24 h-24 rounded-full mx-auto mb-6 glass-strong shine-sweep flex items-center justify-center overflow-hidden shadow-black/50">
                 <i data-lucide="music" class="w-12 h-12 text-white/60 absolute"></i>
                 <img src="/logo.png" class="absolute inset-0 w-full h-full object-cover" onerror="this.style.display='none'" />
             </div>
@@ -17,7 +15,7 @@ var Profile = {
             <div id="sync-card" class="glass rounded-2xl p-5 max-w-sm mx-auto space-y-3 text-left mb-6"></div>
 
             <div class="glass rounded-2xl p-5 max-w-sm mx-auto space-y-3 text-left mb-6">
-                <h3 class="text-white font-bold text-sm uppercase tracking-wider mb-2 flex items-center gap-2">
+                <h3 class="text-white font-bold text-sm mb-2 flex items-center gap-2">
                     <i data-lucide="smartphone" class="w-4 h-4 text-white/70"></i> Aplikasi & PWA
                 </h3>
                 <div class="flex justify-between"><span class="text-white/70 text-sm">Nama</span><span class="text-white font-medium text-sm">AustinPlay</span></div>
@@ -31,7 +29,7 @@ var Profile = {
             </div>
 
             <div class="glass rounded-2xl p-5 max-w-sm mx-auto space-y-4 text-left mb-6">
-                <h3 class="text-white font-bold text-sm uppercase tracking-wider mb-2 border-b border-white/10 pb-2 flex items-center gap-2">
+                <h3 class="text-white font-bold text-sm mb-2 border-b border-white/10 pb-2 flex items-center gap-2">
                     <i data-lucide="code" class="w-4 h-4 text-white/70"></i> Developer Profile
                 </h3>
                 <div class="flex justify-between items-center">

@@ -1,7 +1,7 @@
 var Artist={
     init(){
         gid('artist-container').innerHTML=`
-        <div id="artist-modal" class="fixed inset-0 bg-[#1a1b22] flex flex-col z-30" style="display:none; animation: slideUp 0.3s ease-out forwards;">
+        <div id="artist-modal" class="fixed inset-0 bg-[#060608] flex flex-col z-30" style="display:none; animation: slideUp 0.3s ease-out forwards;">
             <div class="flex items-center justify-between gap-3 p-4 pt-safe bg-transparent absolute top-0 left-0 w-full z-[100] transition-all" id="artist-header">
                 <div class="flex items-center gap-3 min-w-0">
                     <button onclick="Artist.close()" class="glass glass-hover rounded-full text-white p-3 active:scale-90 shadow-md bg-black/40 cursor-pointer"><i data-lucide="arrow-left" class="w-6 h-6"></i></button>
@@ -21,7 +21,7 @@ var Artist={
         const n = gid('artist-name');
         if (!h) return;
         if (c.scrollTop > 50) {
-            h.style.background = 'rgba(26, 27, 34, 0.9)';
+            h.style.background = 'rgba(6, 6, 8, 0.92)';
             if(n) n.style.opacity = '1';
         } else {
             h.style.background = 'transparent';
@@ -46,9 +46,9 @@ var Artist={
         gid('artist-content').innerHTML = `
         <div class="relative w-full aspect-square max-h-[40vh] overflow-hidden -mt-16 mb-6">
             <img src="${tImg}" class="w-full h-full object-cover opacity-50" onerror="this.src='${FI}'" />
-            <div class="absolute inset-0 bg-gradient-to-t from-[#14151a] to-transparent"></div>
-            <div class="absolute bottom-6 left-6 right-6 flex flex-col justify-end items-center text-center">
-                <img src="${tImg}" class="w-24 h-24 rounded-full mb-3 object-cover" onerror="this.src='${FI}'" />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#060608] to-transparent"></div>
+            <div class="absolute bottom-6 left-6 right-6 flex flex-col justify-end items-start text-left">
+                <img src="${tImg}" class="w-20 h-20 rounded-2xl mb-3 object-cover" onerror="this.src='${FI}'" />
                 <h2 class="text-2xl font-black text-white drop-shadow-md">${es(name || 'Artist')}</h2>
             </div>
         </div>
@@ -78,11 +78,11 @@ var Artist={
                 var fullHtml = `
                 <div class="relative w-full aspect-square max-h-[50vh] overflow-hidden -mt-20 mb-6">
                     <img src="${headerImg}" class="w-full h-full object-cover" onerror="this.src='${FI}'" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-[#14151a] via-[#14151a]/60 to-transparent"></div>
-                    <div class="absolute bottom-6 left-6 right-6 flex flex-col justify-end items-center text-center">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#060608] via-[#060608]/60 to-transparent"></div>
+                    <div class="absolute bottom-6 left-6 right-6 flex flex-col justify-end items-start text-left">
                         <img src="${headerImg}" class="artist-photo mb-4" onerror="this.src='${FI}'" />
                         <h2 class="text-3xl md:text-5xl font-black text-white drop-shadow-md">${es(a.name)}</h2>
-                        <div class="flex items-center justify-center gap-3 mt-4">
+                        <div class="flex items-center justify-start gap-3 mt-4">
                             <button id="artist-like-btn" onclick="Artist.toggleLike()" class="px-6 py-2.5 rounded-full border text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95 ${likeBtnClass}">
                                 <i data-lucide="user-check" class="w-4 h-4 ${likeIconClass}"></i> <span id="artist-like-text">${likeText}</span>
                             </button>
