@@ -3,7 +3,7 @@ var Profile = {
         var el = gid('view-dev');
         if(!el) return;
         el.innerHTML = `
-        <div class="pt-8 pb-3.5 px-4 sticky top-0 z-30 border-b border-white/10 shadow-2xl transition-all" style="background: linear-gradient(180deg, rgba(8, 9, 13, 0.4) 0%, rgba(8, 9, 13, 0.75) 100%), url('/banner.png') center/cover no-repeat; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+        <div class="ap-banner">
             <h1 class="text-3xl font-black text-white tracking-tight drop-shadow-md">Profil</h1>
         </div>
         <div class="pt-6 px-4 text-center">

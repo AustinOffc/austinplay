@@ -49,11 +49,9 @@ var Home = {
         var moreActive = moreCats.some(function(c) { return c.name === Home.activeCategory; });
 
         gid('view-home').innerHTML = `
-        <div class="pt-8 pb-3.5 px-4 sticky top-0 z-30 border-b border-white/10 shadow-2xl transition-all" style="background: linear-gradient(180deg, rgba(8, 9, 13, 0.4) 0%, rgba(8, 9, 13, 0.75) 100%), url('/banner.png') center/cover no-repeat; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
-            <div class="flex justify-between items-center mb-3">
-                <div>
-                    <h1 class="text-3xl font-black text-white tracking-tight drop-shadow-md">AustinPlay</h1>
-                </div>
+        <div class="ap-hero">
+            <div class="flex items-center gap-2.5">
+                <h1 class="sr-only">AustinPlay</h1>
                 <div class="flex items-center gap-2.5">
                     <button onclick="App.switch('search')" class="w-10 h-10 rounded-2xl bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/90 hover:text-white hover:bg-black/60 active:scale-95 transition-all shadow-lg" title="Cari">
                         <i data-lucide="search" class="w-5 h-5"></i>
@@ -63,6 +61,8 @@ var Home = {
                     </button>
                 </div>
             </div>
+        </div>
+        <div class="ap-chips">
             <!-- Category Bar: primary segments + expandable "more" grid -->
             <div id="home-category-bar" class="pt-1">
                 <div class="flex items-center gap-2">
@@ -80,8 +80,7 @@ var Home = {
             <div id="home-default-view">
                 <div class="space-y-7">
                     <div>
-                        <h2 class="text-sm font-bold text-white/60 mb-2.5 tracking-wide uppercase flex items-center gap-2">
-                            <i data-lucide="users" class="w-3.5 h-3.5 text-white/50"></i>
+                        <h2 class="text-sm font-bold text-white/60 mb-2.5 flex items-center gap-2">
                             <span>Top Artists</span>
                         </h2>
                         <div id="home-artists" class="flex flex-wrap gap-2"></div>
@@ -89,16 +88,14 @@ var Home = {
                     <div>
                         <div class="flex items-center justify-between mb-3">
                             <h2 class="text-lg font-bold text-white tracking-wide flex items-center gap-2.5">
-                                <i data-lucide="zap" class="w-5 h-5 text-white/80 fill-white/10"></i>
                                 <span>Quick Picks</span>
                             </h2>
-                            <span class="text-[10px] text-white/40 font-medium">Geser &rarr;</span>
+                            
                         </div>
                         <div id="home-grid" class="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x snap-mandatory"></div>
                     </div>
                     <div>
                         <h2 class="text-lg font-bold text-white mb-3 tracking-wide flex items-center gap-2.5">
-                            <i data-lucide="disc" class="w-5 h-5 text-white/70"></i>
                             <span>Popular Playlists</span>
                         </h2>
                         <div id="home-scroll" class="grid grid-cols-2 gap-3"></div>

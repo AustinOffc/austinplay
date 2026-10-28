@@ -396,39 +396,8 @@ var App={
         document.documentElement.classList.remove('theme-light');
         localStorage.removeItem('theme');
 
-        gid('nav-container').innerHTML=`
-        <div class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[170] flex flex-col items-center">
-            <div id="nav-expand-panel" class="nav-expand-panel glass-dock rounded-[28px] py-2 px-2 mb-3 flex items-center gap-1 shadow-2xl">
-                <button onclick="App.switch('home')" id="nav-home" class="nav-item group relative flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation py-1.5 px-2.5 rounded-2xl transition-all duration-300 active:scale-95">
-                    <i data-lucide="home" class="w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300"></i>
-                    <span class="nav-label text-[9px] font-medium transition-all duration-300 mt-0.5">Home</span>
-                </button>
-                <button onclick="App.switch('search')" id="nav-search" class="nav-item group relative flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation py-1.5 px-2.5 rounded-2xl transition-all duration-300 active:scale-95">
-                    <i data-lucide="search" class="w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300"></i>
-                    <span class="nav-label text-[9px] font-medium transition-all duration-300 mt-0.5">Search</span>
-                </button>
-                <button onclick="App.switch('library')" id="nav-library" class="nav-item group relative flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation py-1.5 px-2.5 rounded-2xl transition-all duration-300 active:scale-95">
-                    <i data-lucide="library" class="w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300"></i>
-                    <span class="nav-label text-[9px] font-medium transition-all duration-300 mt-0.5">Library</span>
-                </button>
-                <button onclick="App.switch('offline')" id="nav-offline" class="nav-item group relative flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation py-1.5 px-2.5 rounded-2xl transition-all duration-300 active:scale-95">
-                    <i data-lucide="wifi-off" class="w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300"></i>
-                    <span class="nav-label text-[9px] font-medium transition-all duration-300 mt-0.5">Offline</span>
-                </button>
-                <button onclick="App.switch('liked')" id="nav-liked" class="nav-item group relative flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation py-1.5 px-2.5 rounded-2xl transition-all duration-300 active:scale-95">
-                    <i data-lucide="heart" class="w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300"></i>
-                    <span class="nav-label text-[9px] font-medium transition-all duration-300 mt-0.5">Liked</span>
-                </button>
-                <button onclick="App.switch('dev')" id="nav-dev" class="nav-item group relative flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation py-1.5 px-2.5 rounded-2xl transition-all duration-300 active:scale-95">
-                    <i data-lucide="user" class="w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300"></i>
-                    <span class="nav-label text-[9px] font-medium transition-all duration-300 mt-0.5">Profile</span>
-                </button>
-            </div>
-            <button onclick="App.toggleNav()" id="nav-fab" class="nav-fab w-14 h-14 rounded-full glass-dock shadow-2xl flex items-center justify-center active:scale-90 transition-transform duration-300" title="Menu">
-                <i data-lucide="chevron-up" id="nav-fab-icon" class="w-6 h-6 text-white transition-transform duration-300"></i>
-            </button>
-        </div>`;
-        
+        gid('nav-container').innerHTML=`<nav class="ap-nav" aria-label="Navigasi utama"><button onclick="App.switch('home')" id="nav-home" class="nav-item" aria-label="Home"><i data-lucide="home"></i><span class="nav-label">Home</span></button><button onclick="App.switch('search')" id="nav-search" class="nav-item" aria-label="Search"><i data-lucide="search"></i><span class="nav-label">Search</span></button><button onclick="App.switch('library')" id="nav-library" class="nav-item" aria-label="Library"><i data-lucide="library"></i><span class="nav-label">Library</span></button><button onclick="App.switch('offline')" id="nav-offline" class="nav-item" aria-label="Offline"><i data-lucide="wifi-off"></i><span class="nav-label">Offline</span></button><button onclick="App.switch('liked')" id="nav-liked" class="nav-item" aria-label="Liked"><i data-lucide="heart"></i><span class="nav-label">Liked</span></button><button onclick="App.switch('dev')" id="nav-dev" class="nav-item" aria-label="Profile"><i data-lucide="user"></i><span class="nav-label">Profile</span></button></nav>`;
+
         Profile.render();
         
         MP.init();FullPlayer.init();Artist.init();Album.init();Home.render();Search.render();
@@ -626,9 +595,9 @@ var App={
             var isCurrent = (n === t);
 
             if(isCurrent){
-                b.className = 'nav-item group relative flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation py-1.5 px-2.5 sm:px-3 rounded-2xl bg-white/20 text-white font-bold transition-all duration-300 shadow-md scale-105';
+                b.className = 'nav-item is-active';
             } else {
-                b.className = 'nav-item group relative flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation py-1.5 px-2 rounded-2xl text-white/50 hover:text-white hover:bg-white/10 transition-all duration-300';
+                b.className = 'nav-item';
             }
         });
 

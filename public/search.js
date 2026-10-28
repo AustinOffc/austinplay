@@ -1,7 +1,7 @@
 var Search={
     render(){
         gid('view-search').innerHTML=`
-        <div class="pt-8 pb-3.5 px-4 sticky top-0 z-30 border-b border-white/10 shadow-2xl transition-all" style="background: linear-gradient(180deg, rgba(8, 9, 13, 0.4) 0%, rgba(8, 9, 13, 0.75) 100%), url('/banner.png') center/cover no-repeat; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+        <div class="ap-banner">
             <h1 class="text-3xl font-black text-white tracking-tight drop-shadow-md mb-3">Cari</h1>
             <form id="search-form" class="relative" autocomplete="off">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center text-white/60"><i data-lucide="search" class="h-5 w-5"></i></div>

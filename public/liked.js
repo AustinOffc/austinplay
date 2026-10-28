@@ -48,7 +48,7 @@ var Liked = {
         }
 
         el.innerHTML = `
-        <div class="pt-8 pb-3.5 px-4 sticky top-0 z-30 border-b border-white/10 shadow-2xl transition-all flex justify-between items-center" style="background: linear-gradient(180deg, rgba(8, 9, 13, 0.4) 0%, rgba(8, 9, 13, 0.75) 100%), url('/banner.png') center/cover no-repeat; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+        <div class="ap-banner flex justify-between items-center">
             <h1 class="text-3xl font-black text-white tracking-tight drop-shadow-md">Liked Songs</h1>
             <div class="w-10 h-10 rounded-2xl bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-lg">
                 <i data-lucide="heart" class="w-5 h-5 fill-current"></i>

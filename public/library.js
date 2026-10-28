@@ -10,7 +10,7 @@ var Library={
         var isPlaylistsTab = Library.activeTab === 'playlists';
         var isArtistsTab = Library.activeTab === 'artists';
 
-        var html = '<div class="pt-8 pb-3.5 px-4 sticky top-0 z-30 border-b border-white/10 shadow-2xl transition-all" style="background: linear-gradient(180deg, rgba(8, 9, 13, 0.4) 0%, rgba(8, 9, 13, 0.75) 100%), url(\'/banner.png\') center/cover no-repeat; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">' +
+        var html = '<div class="ap-banner">' +
             '<div class="flex items-center justify-between mb-3">' +
                 '<h1 class="text-3xl font-black text-white tracking-tight drop-shadow-md">Library</h1>' +
             '</div>' +
