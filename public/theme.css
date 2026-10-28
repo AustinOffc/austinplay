@@ -264,3 +264,21 @@ html.tab-hidden *, html.tab-hidden *::before, html.tab-hidden *::after { animati
   body #lyrics-overlay .player-bg-blur-img { filter: grayscale(1) blur(30px) brightness(.18) contrast(1.1) !important; -webkit-filter: grayscale(1) blur(30px) brightness(.18) contrast(1.1) !important; }
   body .player-bg-glow { animation: none !important; filter: blur(24px) !important; }
 }
+
+/* =====================================================================
+   v5 — Home top bar + category row fixes
+   ===================================================================== */
+/* Title left, search/profile pinned right */
+.ap-top > div { flex: 1 1 auto; width: 100%; min-width: 0; justify-content: space-between; }
+.ap-top h1 { margin-right: auto; }
+
+/* Category row: chips scroll sideways, the "more" toggle stays pinned on the right */
+#home-category-bar > div:first-child { overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; gap: 8px !important; }
+#home-category-bar > div:first-child::-webkit-scrollbar { display: none; }
+body .home-chip-btn { padding: 7px 12px !important; font-size: 13px !important; }
+body #home-more-toggle {
+  position: sticky; right: 0; z-index: 2; flex: none; margin-left: auto;
+  width: 36px !important; height: 36px !important; background: var(--void) !important;
+  box-shadow: -12px 0 10px 2px var(--void) !important;
+}
+body #home-more-toggle.home-more-toggle--active { background: var(--ink) !important; box-shadow: -12px 0 10px 2px var(--void) !important; }
