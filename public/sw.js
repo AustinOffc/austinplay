@@ -1,4 +1,4 @@
-const CACHE_STATIC_NAME = 'austinplay-static-v15';
+const CACHE_STATIC_NAME = 'austinplay-static-v16';
 const CACHE_DATA_NAME = 'austinplay-api-v12';
 
 const STATIC_ASSETS = [

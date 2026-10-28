@@ -241,3 +241,26 @@ body .glass-strong[class*="rounded-t-3xl"] { border-radius: 18px 18px 0 0 !impor
 /* ---------- Skeleton / loading ---------- */
 body .animate-pulse { animation: apPulse 1.6s ease-in-out infinite; }
 @keyframes apPulse { 50% { opacity: .45; } }
+
+/* =====================================================================
+   v4 — performance
+   ===================================================================== */
+/* Animate only cheap properties; never layout (width/height/margin) */
+body .transition-all, body .transition, body .transition-colors, body .transition-opacity, body .transition-transform {
+  transition-property: color, background-color, border-color, opacity, transform, box-shadow !important;
+}
+/* Progress bars follow playback directly (no 350ms lag) */
+body #full-progress, body #full-vol-progress, body #mini-progress, body #mini-circle-progress { transition: none !important; }
+
+/* Skip rendering list items that are off-screen */
+body .home-grid-card, body #home-scroll > div { content-visibility: auto; contain-intrinsic-size: 0 74px; }
+
+/* Pause every animation while the tab is hidden (class set in index.html) */
+html.tab-hidden *, html.tab-hidden *::before, html.tab-hidden *::after { animation-play-state: paused !important; }
+
+/* Lighter backdrop on phones: smaller blur radius, still glow, no endless drift */
+@media (max-width: 767px) {
+  body .player-bg-blur-img { filter: grayscale(1) blur(16px) brightness(.55) contrast(1.05) !important; -webkit-filter: grayscale(1) blur(16px) brightness(.55) contrast(1.05) !important; transform: scale(1.15); }
+  body #lyrics-overlay .player-bg-blur-img { filter: grayscale(1) blur(30px) brightness(.18) contrast(1.1) !important; -webkit-filter: grayscale(1) blur(30px) brightness(.18) contrast(1.1) !important; }
+  body .player-bg-glow { animation: none !important; filter: blur(24px) !important; }
+}

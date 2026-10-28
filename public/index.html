@@ -45,8 +45,21 @@
     <script>
         window.lucide = window.lucide || { createIcons: function() {} };
     </script>
+    <script>
+        // Batch lucide.createIcons(): many render paths call it back to back; run once per frame instead.
+        window.__apLucide = function () {
+            var L = window.lucide; if (!L || typeof L.createIcons !== 'function' || L.__ap) return;
+            var real = L.createIcons.bind(L), queued = false;
+            L.createIcons = function (o) {
+                if (o) return real(o);
+                if (queued) return; queued = true;
+                requestAnimationFrame(function () { queued = false; try { real(); } catch (e) {} });
+            };
+            L.__ap = true; try { real(); } catch (e) {}
+        };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://unpkg.com/lucide@latest" onload="if(window.lucide && typeof window.lucide.createIcons === 'function') try{ window.lucide.createIcons(); } catch(e){}"></script>
+    <script defer src="https://unpkg.com/lucide@latest" onload="__apLucide()"></script>
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -607,7 +620,7 @@
             transition-timing-function: var(--ease) !important;
         }
     </style>
-    <link rel="stylesheet" href="/theme.css?v=26">
+    <link rel="stylesheet" href="/theme.css?v=27">
 </head>
 <body class="h-[100dvh] w-full bg-transparent text-white overflow-hidden flex flex-col">
     <div class="app-bg"></div>
