@@ -273,7 +273,7 @@ var Search={
         }
     },
     apply(){
-        if(S.filter==='songs') S.sr=S.ar||[];
+        if(S.filter==='songs'){ S.sr=S.ar||[]; if(typeof warmTracks==='function') warmTracks(S.sr,2); }
         else if(S.filter==='playlists') S.sr=S.pr||[];
         else if(S.filter==='artists') S.sr=S.art||[];
         Search.show();

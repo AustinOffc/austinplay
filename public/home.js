@@ -559,6 +559,7 @@ var Home = {
                             ytUrl: s.url
                         };
                     });
+                    if (typeof warmTracks === 'function') warmTracks(S.ht, 2);
                 }
                 var plist = [].concat(d.result.playlists || []).concat(d.result.albums || []);
                 if (plist.length < 4) {

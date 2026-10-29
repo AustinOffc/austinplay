@@ -263,7 +263,7 @@
             }
             var s = todo[i], vid = s.videoId || s.id;
             var ytUrl = s.ytUrl || ('https://youtube.com/watch?v=' + vid);
-            fetch(API.ytplay, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: ytUrl }) })
+            fetch(API.ytplay, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: ytUrl, prefetch: true }) })
                 .then(function (r) { return r.json(); })
                 .then(function (d) {
                     if (d && d.result && d.result.download && d.result.download.audio) {

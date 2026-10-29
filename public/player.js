@@ -99,7 +99,7 @@ AU.addEventListener('timeupdate',function(){
 AU.addEventListener('play',function(){S.ip=true;S.il=false;UB();SP();try{AU.playbackRate=S.playbackRate||1.0;}catch(ex){}});
 AU.addEventListener('pause',function(){if(!AU.ended){S.ip=false;UB();ST();}});
 AU.addEventListener('waiting',function(){S.il=true;UB();});
-AU.addEventListener('playing',function(){S.il=false;UB();});
+AU.addEventListener('playing',function(){S.il=false;skipStreak=0;UB();});
 AU.addEventListener('ended',function(){ST();if(typeof handleTrackEnded==='function'&&handleTrackEnded())return;if(S.rm==='one'){AU.currentTime=0;AU.play().catch(function(){});}else if(S.autoNext){NX();}else{S.ip=false;UB();}});
 AU.addEventListener('error',function(){
     if(!AU.getAttribute('src'))return;
@@ -251,9 +251,62 @@ function savePwaCaches() {
 var hasPrefetchedNext = false;
 var isPreloadingNext = false;
 
+// fetch dengan batas waktu supaya UI tidak menggantung selamanya di "Menyiapkan lagu..."
+function fetchWithTimeout(url, opts, ms) {
+    if (typeof AbortController === 'undefined') return fetch(url, opts);
+    var ctrl = new AbortController();
+    var t = setTimeout(function(){ ctrl.abort(); }, ms || 45000);
+    opts = Object.assign({}, opts || {}, { signal: ctrl.signal });
+    return fetch(url, opts).finally(function(){ clearTimeout(t); });
+}
+
+// Pre-resolve beberapa lagu teratas di daftar (home/hasil cari) supaya saat diketuk server sudah siap.
+var warmed = {};
+var warmQueue = [];
+var warmBusy = false;
+function warmTracks(list, max) {
+    try {
+        if (!navigator.onLine || !list || !list.length) return;
+        if (navigator.connection && navigator.connection.saveData) return;
+        list.slice(0, max || 2).forEach(function(t){
+            var v = t && (t.videoId || t.id);
+            if (!v || warmed[v] || audioUrlCache[v]) return;
+            warmed[v] = 1;
+            warmQueue.push(t);
+        });
+        pumpWarm();
+    } catch(e) {}
+}
+function pumpWarm() {
+    if (warmBusy || !warmQueue.length) return;
+    // jangan rebutan dengan lagu yang sedang disiapkan user
+    if (S.il) { setTimeout(pumpWarm, 3000); return; }
+    warmBusy = true;
+    var t = warmQueue.shift(), v = t.videoId || t.id;
+    fetchWithTimeout(API.ytplay, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({query: t.ytUrl || ('https://youtube.com/watch?v=' + v), prefetch: true})
+    }, 50000).then(function(r){ return r.json(); }).then(function(d){
+        if (d && d.status && d.result && d.result.download && d.result.download.audio) {
+            audioUrlCache[v] = d.result.download.audio; savePwaCaches();
+        }
+    }).catch(function(){}).then(function(){
+        warmBusy = false;
+        setTimeout(pumpWarm, 1500);
+    });
+}
+
+var prefetchTries = 0;
+var prefetchRetryAt = 0;
+var PREFETCH_LEAD_SEC = 30;
+var prePlayer = null;
+
 function checkAndPreloadNext() {
     if (hasPrefetchedNext || isPreloadingNext) return;
-    if (S.pd > 0 && (S.pd - S.pt <= 40 || S.pt >= S.pd * 0.7)) {
+    if (Date.now() < prefetchRetryAt) return;
+    // ~30 detik sebelum lagu habis (lagu pendek: setelah separuh jalan)
+    if (S.pd > 0 && ((S.pd - S.pt) <= PREFETCH_LEAD_SEC || (S.pd <= 70 && S.pt >= S.pd * 0.5))) {
         hasPrefetchedNext = true;
         triggerPreloadNextTrack();
     }
@@ -297,26 +350,36 @@ async function triggerPreloadNextTrack(){
             }).catch(function(){});
         }
 
-        // Pre-fetch audio URL
-        if (!audioUrlCache[nextVid]) {
+        // Pre-resolve audio lagu berikutnya (server menyimpannya ke cache disk, jadi saat giliran tiba langsung siap)
+        var rawAudioUrl = audioUrlCache[nextVid];
+        if (!rawAudioUrl) {
             var nextYtUrl = nextTrack.ytUrl || ('https://youtube.com/watch?v=' + nextVid);
-            var r = await fetch(API.ytplay, {
+            var r = await fetchWithTimeout(API.ytplay, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({query: nextYtUrl})
-            });
+                body: JSON.stringify({query: nextYtUrl, prefetch: true})
+            }, 50000);
             var d = await r.json();
             if (d && d.status && d.result && d.result.download && d.result.download.audio) {
-                var rawAudioUrl = d.result.download.audio;
+                rawAudioUrl = d.result.download.audio;
                 audioUrlCache[nextVid] = rawAudioUrl;
-
-                var srcUrl = ((typeof audioCtx !== 'undefined' && audioCtx) || rawAudioUrl.indexOf('#via-proxy') > -1) ? apiUrl('/api/proxy-audio?url=' + encodeURIComponent(rawAudioUrl)) : rawAudioUrl;
-                var preAudio = new Audio();
-                preAudio.preload = 'auto';
-                preAudio.src = srcUrl;
+                savePwaCaches();
+            } else {
+                throw new Error((d && d.error) || 'prefetch gagal');
             }
         }
+        // Hangatkan koneksi ke proxy (hanya metadata, hemat kuota). Satu elemen dipakai ulang.
+        if (rawAudioUrl) {
+            var srcUrl = ((typeof audioCtx !== 'undefined' && audioCtx) || rawAudioUrl.indexOf('#via-proxy') > -1) ? apiUrl('/api/proxy-audio?url=' + encodeURIComponent(rawAudioUrl)) : rawAudioUrl;
+            if (!prePlayer) { prePlayer = new Audio(); }
+            prePlayer.preload = 'metadata';
+            prePlayer.src = srcUrl;
+        }
+        prefetchTries = 0;
     } catch(e) {
+        // Gagal -> coba lagi sekali setelah jeda, jangan menghajar server tiap detik.
+        prefetchTries++;
+        if (prefetchTries < 2) { hasPrefetchedNext = false; prefetchRetryAt = Date.now() + 10000; }
     } finally {
         isPreloadingNext = false;
     }
@@ -909,6 +972,8 @@ function loadTrack(track,resumeAt,forceFresh){
     if(!track)return;
     hasPrefetchedNext = false;
     isPreloadingNext = false;
+    prefetchTries = 0;
+    prefetchRetryAt = 0;
     ST();
     if(fbState){clearTimeout(fbState.timer);}
     fbState=null;
@@ -920,7 +985,8 @@ function loadTrack(track,resumeAt,forceFresh){
 // Status sumber audio untuk lagu yang sedang dimuat (fallback bertahap).
 // stage 0 = URL langsung, stage 1 = lewat /api/proxy-audio, lalu minta URL baru (cache bisa kadaluarsa).
 var fbState=null;
-var SRC_TIMEOUT_MS=12000;
+var nextFetchPurge=false;
+var SRC_TIMEOUT_MS=15000;
 
 function buildSrc(raw,stage){
     return stage===0?raw:apiUrl('/api/proxy-audio?url='+encodeURIComponent(raw));
@@ -972,13 +1038,30 @@ function advanceSource(){
         // URL dari cache mungkin sudah kadaluarsa -> buang & ambil URL baru dari server.
         try{delete audioUrlCache[f.vid];savePwaCaches();}catch(e){}
         var t=f.track,r=f.resumeAt;
+        nextFetchPurge=String(f.raw).indexOf('local:')===0;
         fbState=null;
         fetchAudioAndPlay(t,r,true);
         return;
     }
     f.failed=true;
+    failAndSkip(f.track);
+}
+
+// Lagu gagal disiapkan/diputar: tampilkan pesan jelas lalu lanjut otomatis ke lagu berikutnya
+// (maks 3 kali beruntun supaya tidak berputar tanpa henti kalau server memang sedang bermasalah).
+var skipStreak=0;
+function failAndSkip(track,reason){
+    if(S.ct!==track)return;
     S.il=false;S.ip=false;UB();
-    if(typeof showToast==='function')showToast('Gagal memutar lagu ini. Tap Play untuk coba lagi');
+    var hasNext=!!(S.pl&&S.pl.length>1);
+    if(hasNext&&skipStreak<3){
+        skipStreak++;
+        if(typeof showToast==='function')showToast(reason||'Lagu ini sementara tidak tersedia, lanjut ke lagu berikutnya');
+        setTimeout(function(){if(S.ct===track&&!S.ip)NX();},1500);
+    }else{
+        skipStreak=0;
+        if(typeof showToast==='function')showToast(hasNext?'Server sedang sibuk, coba lagi beberapa saat lagi':'Lagu ini sementara tidak tersedia. Tap Play untuk coba lagi');
+    }
 }
 
 var offlineBlobUrl=null;
@@ -1029,10 +1112,13 @@ async function fetchAudioAndPlay(track,resumeAt,forceFresh){
             var ytUrl=track.ytUrl||('https://youtube.com/watch?v='+vid);
             // Server ekstraksi kadang gagal sesaat (provider timeout/canceled) -> coba ulang otomatis.
             var lastErr='';
-            for(var attempt=0;attempt<4&&!audioUrl;attempt++){
-                if(attempt>0){await new Promise(function(res){setTimeout(res,1200*attempt);});if(S.ct!==track)return;}
+            var purge=nextFetchPurge;nextFetchPurge=false;
+            var gone=false;
+            // Server sudah mencoba semua provider (maks ~45 dtk) -> cukup 2 percobaan, lalu tampilkan error & skip.
+            for(var attempt=0;attempt<2&&!audioUrl&&!gone;attempt++){
+                if(attempt>0){await new Promise(function(res){setTimeout(res,1000);});if(S.ct!==track)return;}
                 try{
-                    var r=await fetch(API.ytplay,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:ytUrl,refresh:!!forceFresh})});
+                    var r=await fetchWithTimeout(API.ytplay,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:ytUrl,refresh:!!forceFresh||attempt>0,purge:purge&&attempt===0})},55000);
                     var d=await r.json().catch(function(){return null;});
                     if(d&&d.status&&d.result&&d.result.download&&d.result.download.audio){
                         audioUrl = d.result.download.audio;
@@ -1041,10 +1127,11 @@ async function fetchAudioAndPlay(track,resumeAt,forceFresh){
                         savePwaCaches();
                     }else{
                         lastErr='HTTP '+r.status+' '+((d&&(d.error||d.message))||'');
+                        if(d&&(d.retryable===false))gone=true; // cooldown / video memang tidak ada: jangan diulang
                     }
                 }catch(netErr){lastErr='network: '+(netErr&&netErr.message);}
             }
-            if(!audioUrl){console.warn('[ytplay] gagal setelah 4x percobaan:',lastErr);}
+            if(!audioUrl){console.warn('[ytplay] gagal:',lastErr);}
         }
         if(S.ct!==track)return;
         if(audioUrl){
@@ -1052,11 +1139,10 @@ async function fetchAudioAndPlay(track,resumeAt,forceFresh){
             // Kalau Equalizer (Web Audio) aktif, wajib lewat proxy supaya CORS aman.
             startSource(((typeof audioCtx !== 'undefined' && audioCtx) || audioUrl.indexOf('#via-proxy') > -1) ? 1 : 0);
         }else{
-            S.il=false;S.ip=false;UB();
-            if(typeof showToast === 'function') showToast('Server gagal mengambil audio lagu ini. Tap Play untuk coba lagi');
+            failAndSkip(track);
         }
     }catch(e){
-        if(S.ct===track){S.il=false;S.ip=false;UB();}
+        if(S.ct===track)failAndSkip(track);
     }
 }
 
