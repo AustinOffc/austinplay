@@ -267,6 +267,7 @@ async function saveTrackForOffline(track) {
         // Remove from offline
         list.splice(existingIndex, 1);
         try { localStorage.setItem('pwa_offline_tracks', JSON.stringify(list)); } catch(e){}
+        if (window.OfflineAudio) OfflineAudio.del(vid);
         showToast('Lagu dihapus dari Mode Offline PWA');
         updateOfflineButtons();
         if (typeof OfflineView !== 'undefined' && typeof S !== 'undefined' && S.at === 'offline') OfflineView.render();
@@ -289,22 +290,27 @@ async function saveTrackForOffline(track) {
     list.unshift(songObj);
     try { localStorage.setItem('pwa_offline_tracks', JSON.stringify(list)); } catch(e){}
 
-    // 2. Pre-fetch & cache Audio URL
+    // 2. Unduh FILE audio ke perangkat (supaya bisa diputar tanpa internet)
+    var audioOk = false;
     try {
-        if (typeof audioUrlCache !== 'undefined' && !audioUrlCache[vid]) {
-            var ytUrl = track.ytUrl || ('https://youtube.com/watch?v=' + vid);
-            var r = await fetch(API.ytplay, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query: ytUrl })
-            });
-            var d = await r.json();
-            if (d && d.result && d.result.download && d.result.download.audio) {
-                audioUrlCache[vid] = d.result.download.audio;
-                if (typeof savePwaCaches === 'function') savePwaCaches();
+        if (window.OfflineAudio) {
+            if (!navigator.onLine) {
+                audioOk = false;
+            } else {
+                audioOk = await OfflineAudio.download(songObj);
             }
         }
-    } catch(e) {}
+    } catch(e) { audioOk = false; }
+
+    if (!audioOk) {
+        // Gagal unduh audio -> jangan biarkan lagu "palsu" di daftar offline
+        var l2 = getOfflineSongs().filter(function(s) { return !(s.videoId === vid || s.id === vid); });
+        try { localStorage.setItem('pwa_offline_tracks', JSON.stringify(l2)); } catch(e){}
+        showToast('Gagal mengunduh audio lagu ini. Cek internet lalu coba lagi');
+        updateOfflineButtons();
+        if (typeof OfflineView !== 'undefined' && typeof S !== 'undefined' && S.at === 'offline') OfflineView.render();
+        return false;
+    }
 
     // 3. Pre-fetch & cache Lyrics
     try {
@@ -402,22 +408,29 @@ var OfflineView = {
                     playIconHtml = '<i data-lucide="play" class="w-4 h-4 text-black fill-current ml-0.5"></i>';
                 }
 
-                var cardBg = isPlay ? 'bg-white/15 border-white/30 shadow-lg' : (isCur ? 'bg-white/10 border-white/20' : 'bg-white/[0.04] border-white/10 hover:bg-white/[0.08]');
-                var titleClass = isCur ? 'text-white font-bold' : 'text-white/90 font-semibold';
+                var cardBg = 'ap-off-card' + (isCur ? ' is-current' : '');
+                var titleClass = 'ap-off-title font-bold';
+                var vidS = s.videoId || s.id;
+                var hasFile = window.OfflineAudio && OfflineAudio.has(vidS);
+                var busyFile = window.OfflineAudio && OfflineAudio.isBusy(vidS);
+                var statusHtml = hasFile
+                    ? '<span class="ap-off-ok">✓ Siap offline</span>'
+                    : (busyFile ? '<span class="ap-off-wait">⏳ Mengunduh…</span>' : '<span class="ap-off-wait">Belum diunduh</span>');
 
                 var dateStr = s.savedAt ? new Date(s.savedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '';
                 var safeSongJson = JSON.stringify(s).replace(/"/g, '&quot;');
 
                 return '<div class="flex items-center gap-3 p-2.5 rounded-2xl border '+cardBg+' active:scale-[0.98] transition-all duration-200 group shadow-md">'+
                     '<div onclick="PK(\'offline\','+i+')" class="flex items-center gap-3 flex-1 min-w-0 cursor-pointer">'+
-                        '<div class="w-5 text-center text-white/50 text-xs font-bold group-hover:text-white shrink-0">'+(i + 1)+'</div>'+
+                        '<div class="ap-off-num w-5 text-center text-xs font-bold shrink-0">'+(i + 1)+'</div>'+
                         '<img src="'+(s.cover || FI)+'" class="w-12 h-12 rounded-xl object-cover shrink-0 shadow-md border border-white/10" onerror="this.src=\''+FI+'\'" />'+
                         '<div class="min-w-0 flex-1">'+
                             '<h3 class="'+titleClass+' text-sm truncate">'+es(s.title)+'</h3>'+
-                            '<p class="text-xs text-white/50 truncate mt-0.5">'+es(s.artist)+(dateStr ? ' • <span class="text-white/40">Offline ('+dateStr+')</span>' : '')+'</p>'+
+                            '<p class="ap-off-sub text-xs truncate mt-0.5">'+es(s.artist)+'</p>'+
+                            '<p class="text-[11px] truncate mt-0.5">'+statusHtml+(dateStr ? '<span class="ap-off-sub"> • '+dateStr+'</span>' : '')+'</p>'+
                         '</div>'+
                     '</div>'+
-                    '<button onclick="event.stopPropagation();saveTrackForOffline('+safeSongJson+');" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/15 text-white/50 hover:text-white border border-white/10 flex items-center justify-center shrink-0 active:scale-90 transition-all" title="Hapus dari Mode Offline PWA">'+
+                    '<button onclick="event.stopPropagation();saveTrackForOffline('+safeSongJson+');" class="ap-off-del w-8 h-8 rounded-full flex items-center justify-center shrink-0 active:scale-90 transition-all" title="Hapus dari Mode Offline PWA">'+
                         '<i data-lucide="trash-2" class="w-4 h-4"></i>'+
                     '</button>'+
                     '<button onclick="PK(\'offline\','+i+')" class="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center shrink-0 active:scale-90 transition-all shadow-md">'+
@@ -441,23 +454,23 @@ var OfflineView = {
         }
 
         el.innerHTML = `
-        <div class="pt-8 pb-3.5 px-4 sticky top-0 z-30 border-b border-white/10 shadow-2xl transition-all flex justify-between items-center bg-black/80 backdrop-blur-md">
+        <div class="ap-off-head pt-8 pb-3.5 px-4 sticky top-0 z-30 shadow-2xl transition-all flex justify-between items-center">
             <div>
                 <div class="flex items-center gap-2">
                     <h1 class="text-2xl font-black text-white tracking-tight drop-shadow-md">Offline Mode</h1>
                     <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase border ${isOnline ? 'border-white/40 text-white bg-white/10' : 'border-white/15 text-white/50 bg-white/5'}">${isOnline ? 'Online' : 'Offline'}</span>
                 </div>
-                <p class="text-xs text-white/50 mt-0.5">PWA Storage & Saved Songs</p>
+                <p class="ap-off-sub text-xs mt-0.5">PWA Storage & Saved Songs</p>
             </div>
             <div class="w-9 h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-white shadow-md">
                 <i data-lucide="wifi-off" class="w-4 h-4"></i>
             </div>
         </div>
 
-        <div class="px-4 mt-4 space-y-3">
+        <div class="px-4 mt-4 space-y-3 pb-44">
             ${offlineSongs.length > 0 ? `
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold text-white/60 uppercase tracking-wider">${offlineSongs.length} Lagu Tersimpan</span>
+                    <span class="ap-off-sub text-xs font-semibold uppercase tracking-wider">${offlineSongs.length} Lagu Tersimpan</span>
                     <button onclick="PK('offline',0)" class="text-xs text-white hover:text-white/80 font-bold hover:underline flex items-center gap-1">
                         <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i> Putar Semua
                     </button>
@@ -468,8 +481,16 @@ var OfflineView = {
         </div>`;
 
         if (window.lucide) lucide.createIcons();
+
+        // Unduh otomatis lagu di daftar yang filenya belum ada di perangkat (butuh internet)
+        if (isOnline && window.OfflineAudio && offlineSongs.some(function(s){ return !OfflineAudio.has(s.videoId || s.id); })) {
+            OfflineAudio.backfill();
+        }
     }
 };
+window.addEventListener('offlineaudio:change', function() {
+    if (typeof S !== 'undefined' && S.at === 'offline' && typeof OfflineView !== 'undefined') OfflineView.render();
+});
 
 var App={
     navOpen:false,

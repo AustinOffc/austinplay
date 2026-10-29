@@ -1,4 +1,4 @@
-const CACHE_STATIC_NAME = 'austinplay-static-v21';
+const CACHE_STATIC_NAME = 'austinplay-static-v22';
 const CACHE_DATA_NAME = 'austinplay-api-v13';
 
 const STATIC_ASSETS = [
@@ -14,6 +14,7 @@ const STATIC_ASSETS = [
   '/theme.css',
   '/app.js',
   '/config.js',
+  '/offline-audio.js',
   '/sync.js',
   '/player.js',
   '/fullplayer.js',

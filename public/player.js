@@ -981,18 +981,51 @@ function advanceSource(){
     if(typeof showToast==='function')showToast('Gagal memutar lagu ini. Tap Play untuk coba lagi');
 }
 
+var offlineBlobUrl=null;
+function playOfflineBlob(track,blob,resumeAt){
+    if(offlineBlobUrl){try{URL.revokeObjectURL(offlineBlobUrl);}catch(e){}offlineBlobUrl=null;}
+    fbState=null; // tidak ada jalur cadangan: file ada di perangkat
+    offlineBlobUrl=URL.createObjectURL(blob);
+    AU.removeAttribute('crossorigin');
+    AU.src=offlineBlobUrl;
+    if(resumeAt){
+        var onMeta=function(){try{AU.currentTime=resumeAt;}catch(e){}AU.removeEventListener('loadedmetadata',onMeta);};
+        AU.addEventListener('loadedmetadata',onMeta);
+    }
+    var p=AU.play();
+    if(p!==undefined&&p.then){
+        p.then(function(){
+            if(S.ct!==track)return;
+            S.il=false;S.ip=true;UB();
+        }).catch(function(err){
+            if(S.ct!==track)return;
+            var name=err&&err.name;
+            if(name==='AbortError')return;
+            S.il=false;S.ip=false;UB();
+            if(name!=='NotAllowedError'&&typeof showToast==='function')showToast('Gagal memutar file offline. Tap Play untuk coba lagi');
+        });
+    }else{S.il=false;UB();}
+}
+
 async function fetchAudioAndPlay(track,resumeAt,forceFresh){
     S.il=true;UB();
     var vid = track.videoId || track.id;
     try{
+        // 1) Lagu yang sudah diunduh ke perangkat -> putar langsung dari file lokal (jalan tanpa internet).
+        if(window.OfflineAudio){
+            var localBlob=await OfflineAudio.get(vid);
+            if(S.ct!==track)return;
+            if(localBlob){playOfflineBlob(track,localBlob,resumeAt);return;}
+        }
+        // 2) Sedang offline & file belum ada di perangkat -> link audio lama pasti gagal, jangan dicoba.
+        if(!navigator.onLine){
+            S.il=false;S.ip=false;UB();
+            if(typeof showToast==='function')showToast('Lagu ini belum terunduh ke perangkat. Nyalakan internet sekali, lalu buka tab Benteng agar diunduh otomatis');
+            return;
+        }
         var audioUrl = forceFresh ? null : audioUrlCache[vid];
         var fresh = false;
         if (!audioUrl) {
-            if (!navigator.onLine) {
-                S.il = false; S.ip = false; UB();
-                if(typeof showToast === 'function') showToast('Mode Offline: Lagu ini belum tersimpan di cache PWA');
-                return;
-            }
             var ytUrl=track.ytUrl||('https://youtube.com/watch?v='+vid);
             // Server ekstraksi kadang gagal sesaat (provider timeout/canceled) -> coba ulang otomatis.
             var lastErr='';
