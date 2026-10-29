@@ -1,5 +1,7 @@
 // PWA - INSTALL & OFFLINE MODE HANDLING
 var deferredInstallPrompt=null;
+var INSTALL_BANNER_SNOOZE_KEY='ap_install_banner_snooze';
+var INSTALL_BANNER_SNOOZE_MS=12*60*60*1000; // setelah ditutup, muncul lagi 12 jam kemudian
 var isStandaloneApp=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true;
 var isIOSDevice=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
 
@@ -65,11 +67,25 @@ window.addEventListener('offline', function() {
 });
 document.addEventListener('DOMContentLoaded', updateOnlineOfflineStatus);
 
-window.addEventListener('beforeinstallprompt',function(e){
-    e.preventDefault();
+function _onBeforeInstall(e){
     deferredInstallPrompt=e;
+    // Browser hanya mengirim event ini kalau app BELUM terinstall (atau sudah dihapus user),
+    // jadi flag 'pwa_installed' lama yang tersisa dianggap basi dan direset.
+    var inStandalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true;
+    if(!inStandalone){
+        try { localStorage.removeItem('pwa_installed'); } catch(err){}
+        isStandaloneApp=false;
+    }
     var btn=document.getElementById('pwa-install-btn');
     if(btn&&!isStandaloneApp)btn.classList.remove('hidden');
+    if(!inStandalone)showInstallBanner();
+}
+if(window.__bip)_onBeforeInstall(window.__bip);
+window.__onBip=_onBeforeInstall;
+window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();
+    window.__bip=e;
+    _onBeforeInstall(e);
 });
 window.addEventListener('appinstalled',function(){
     deferredInstallPrompt=null;
@@ -77,8 +93,58 @@ window.addEventListener('appinstalled',function(){
     isStandaloneApp = true;
     var btn=document.getElementById('pwa-install-btn');
     if(btn)btn.classList.add('hidden');
+    hideInstallBanner();
     showToast('AustinPlay berhasil diinstall!');
 });
+
+// ===== Banner install melayang (atas) — untuk user yang belum install / sudah menghapus app =====
+function _installBannerSnoozed(){
+    try {
+        var t=parseInt(localStorage.getItem(INSTALL_BANNER_SNOOZE_KEY)||'0',10);
+        return t&&(Date.now()-t)<INSTALL_BANNER_SNOOZE_MS;
+    } catch(e){ return false; }
+}
+function hideInstallBanner(){
+    var el=document.getElementById('ap-install-banner');
+    if(!el)return;
+    el.classList.remove('show');
+    setTimeout(function(){ if(el.parentElement)el.remove(); },400);
+}
+function dismissInstallBanner(){
+    try { localStorage.setItem(INSTALL_BANNER_SNOOZE_KEY,String(Date.now())); } catch(e){}
+    hideInstallBanner();
+}
+function showInstallBanner(){
+    if(document.getElementById('ap-install-banner'))return;
+    if(_installBannerSnoozed())return;
+    var inStandalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true;
+    if(inStandalone)return;
+    if(!document.body){ document.addEventListener('DOMContentLoaded',showInstallBanner); return; }
+    var bar=document.createElement('div');
+    bar.id='ap-install-banner';
+    bar.setAttribute('role','dialog');
+    bar.setAttribute('aria-label','Install AustinPlay');
+    bar.innerHTML=
+        '<img class="ap-ib-icon" src="/icon-192.png" alt="">'+
+        '<div class="ap-ib-text">'+
+            '<b>AustinPlay</b>'+
+            '<span>Pasang aplikasinya, musik lebih lancar</span>'+
+        '</div>'+
+        '<button type="button" class="ap-ib-btn" id="ap-ib-install">Install</button>'+
+        '<button type="button" class="ap-ib-close" id="ap-ib-close" aria-label="Tutup">&times;</button>';
+    document.body.appendChild(bar);
+    document.getElementById('ap-ib-install').onclick=function(){ installPWA(); };
+    document.getElementById('ap-ib-close').onclick=dismissInstallBanner;
+    setTimeout(function(){ bar.classList.add('show'); },1200);
+}
+// iOS tidak punya beforeinstallprompt: tampilkan banner kalau belum jalan sebagai app (flag lama diabaikan, karena bisa basi setelah app dihapus)
+if(isIOSDevice&&!((window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone===true)){
+    try { localStorage.removeItem('pwa_installed'); } catch(e){}
+    isStandaloneApp=false;
+    window.addEventListener('load',function(){ setTimeout(showInstallBanner,800); });
+}
+// Event install bisa datang sebelum app.js termuat (ditangkap di index.html): proses juga di sini
+if(window.__bip){ try { showInstallBanner(); } catch(e){} }
 
 function isPwaInstalled() {
     return isStandaloneApp || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true || localStorage.getItem('pwa_installed') === 'true';
@@ -116,24 +182,54 @@ function showPwaRequiredModal() {
     if (window.lucide) lucide.createIcons();
 }
 
+var _installBusy=false;
+function _finishInstallUI(){
+    deferredInstallPrompt=null; window.__bip=null;
+    var btn=document.getElementById('pwa-install-btn');
+    if(btn)btn.classList.add('hidden');
+    hideInstallBanner();
+}
 function installPWA(){
-    if(deferredInstallPrompt){
-        deferredInstallPrompt.prompt();
-        deferredInstallPrompt.userChoice.then(function(choice){
-            if(choice.outcome==='accepted') {
+    if(_installBusy)return;
+    var ev=deferredInstallPrompt||window.__bip;
+    if(ev){
+        _installBusy=true;
+        // prompt() harus dipanggil langsung dari tap user (tanpa await/timeout di depannya)
+        ev.prompt();
+        ev.userChoice.then(function(choice){
+            _installBusy=false;
+            if(choice.outcome==='accepted'){
                 try { localStorage.setItem('pwa_installed', 'true'); } catch(e){}
                 isStandaloneApp = true;
                 showToast('Menginstall AustinPlay...');
             }
-            deferredInstallPrompt=null;
-            var btn=document.getElementById('pwa-install-btn');
-            if(btn)btn.classList.add('hidden');
-        });
-    }else if(isIOSDevice){
-        showToast('Tap ikon Bagikan lalu pilih "Add to Home Screen"');
-    }else{
-        showToast('Petunjuk: Buka menu browser lalu pilih "Tambah ke Layar Utama" / "Install Aplikasi"');
+            _finishInstallUI();
+        }).catch(function(){ _installBusy=false; });
+        return;
     }
+    if(isPwaInstalled()){
+        showToast('AustinPlay sudah terinstall. Buka dari layar utama.');
+        return;
+    }
+    if(isIOSDevice){
+        showToast('Tap ikon Bagikan lalu pilih "Add to Home Screen"');
+        return;
+    }
+    // Browser belum mengirim event install (biasanya baru siap beberapa detik setelah halaman dibuka).
+    _installBusy=true;
+    showToast('Menyiapkan instalasi...');
+    var tries=0;
+    var timer=setInterval(function(){
+        tries++;
+        var e2=deferredInstallPrompt||window.__bip;
+        if(e2){
+            clearInterval(timer); _installBusy=false;
+            showToast('Siap! Tekan "Install Aplikasi" sekali lagi');
+        }else if(tries>=8){
+            clearInterval(timer); _installBusy=false;
+            showToast('Petunjuk: Buka menu browser lalu pilih "Tambah ke Layar Utama" / "Install Aplikasi"');
+        }
+    },500);
 }
 
 // Offline PWA Storage Helper

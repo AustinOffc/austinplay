@@ -2,6 +2,15 @@
 <html lang="id">
 <head>
     <script>
+        // Tangkap event install sedini mungkin supaya tombol "Install Aplikasi" bisa langsung memunculkan dialog install.
+        window.__bip = null;
+        window.addEventListener('beforeinstallprompt', function (e) {
+            e.preventDefault();
+            window.__bip = e;
+            if (typeof window.__onBip === 'function') window.__onBip(e);
+        });
+    </script>
+    <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/sw.js').then(function(reg) {
@@ -18,7 +27,7 @@
     <meta name="theme-color" content="#1a0f07">
     <title>AustinPlay</title>
     <link rel="icon" type="image/png" href="/logo.png">
-    <link rel="apple-touch-icon" href="/logo.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -620,7 +629,7 @@
             transition-timing-function: var(--ease) !important;
         }
     </style>
-    <link rel="stylesheet" href="/theme.css?v=30">
+    <link rel="stylesheet" href="/theme.css?v=32">
 </head>
 <body class="h-[100dvh] w-full bg-transparent text-white overflow-hidden flex flex-col">
     <div class="app-bg"></div>
@@ -673,7 +682,7 @@
     <script src="/fullplayer.js?v=26"></script>
     <script src="/artist.js?v=26"></script>
     <script src="/album.js?v=26"></script>
-    <script src="/app.js?v=26"></script>
+    <script src="/app.js?v=28"></script>
     <script>(function () {
   document.addEventListener('visibilitychange', function () {
     document.documentElement.classList.toggle('tab-hidden', document.hidden);

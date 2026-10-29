@@ -1,4 +1,4 @@
-const CACHE_STATIC_NAME = 'austinplay-static-v18';
+const CACHE_STATIC_NAME = 'austinplay-static-v21';
 const CACHE_DATA_NAME = 'austinplay-api-v13';
 
 const STATIC_ASSETS = [
@@ -6,6 +6,10 @@ const STATIC_ASSETS = [
   '/index.html',
   '/manifest.json',
   '/logo.png',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/icon-maskable-512.png',
+  '/apple-touch-icon.png',
   '/banner.png',
   '/theme.css',
   '/app.js',
