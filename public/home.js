@@ -26,7 +26,7 @@ var Home = {
     render() {
         function chipBtn(c, isActive) {
             var btnStyle = isActive
-                ? 'bg-white text-black font-extrabold shadow-lg shadow-white/20 border border-white scale-105'
+                ? 'is-active font-extrabold'
                 : 'bg-black/40 backdrop-blur-md text-white/80 hover:text-white hover:bg-black/60 border border-white/15 font-medium';
             return '<button onclick="Home.selectCategory(\'' + c.name + '\')" class="home-chip-btn px-4 py-2 rounded-full text-xs whitespace-nowrap transition-all duration-300 ease-out flex items-center gap-1.5 cursor-pointer shrink-0 ' + btnStyle + '">' +
                 (c.icon ? '<i data-lucide="' + c.icon + '" class="w-3.5 h-3.5"></i>' : '') +
@@ -50,16 +50,10 @@ var Home = {
 
         gid('view-home').innerHTML = `
         <div class="ap-top">
-            <div class="flex items-center gap-2.5">
-                <h1 class="ap-title text-3xl font-bold text-white mr-auto">AustinPlay</h1>
-                <div class="flex items-center gap-2.5">
-                    <button onclick="App.switch('search')" class="w-10 h-10 rounded-2xl bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/90 hover:text-white hover:bg-black/60 active:scale-95 transition-all shadow-lg" title="Cari">
-                        <i data-lucide="search" class="w-5 h-5"></i>
-                    </button>
-                    <button onclick="App.switch('dev')" class="w-10 h-10 rounded-2xl bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/90 hover:text-white hover:bg-black/60 active:scale-95 transition-all shadow-lg" title="Profil">
-                        <i data-lucide="user" class="w-5 h-5"></i>
-                    </button>
-                </div>
+            <div class="ap-top-row">
+                <button onclick="App.switch('search')" class="ap-iron-btn" title="Telusuri" aria-label="Telusuri"><i data-lucide="search" class="w-5 h-5"></i></button>
+                <div class="ap-masthead"><svg class="ap-crest" viewBox="0 0 100 112" aria-hidden="true"><defs><linearGradient id="apg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a3a1c"/><stop offset="1" stop-color="#1d1108"/></linearGradient></defs><path d="M50 3 6 16v38c0 28 18 47 44 57 26-10 44-29 44-57V16z" fill="url(#apg)" stroke="#d4a94e" stroke-width="5"/><path d="M42 74V40l26-7v32" fill="none" stroke="#f2d58b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="35" cy="75" r="8" fill="#f2d58b"/><circle cx="61" cy="68" r="8" fill="#f2d58b"/></svg><h1 class="ap-title">AustinPlay</h1><p class="ap-motto">BALAIRUNG MUSIK KERAJAAN</p></div>
+                <button onclick="App.switch('dev')" class="ap-iron-btn" title="Profil" aria-label="Profil"><i data-lucide="shield" class="w-5 h-5"></i></button>
             </div>
         </div>
         <div class="ap-chips">
@@ -78,17 +72,28 @@ var Home = {
         </div>
         <div class="px-4 mt-4" id="home-main-content">
             <div id="home-default-view">
+                <div class="ap-hero">
+                    <div class="ap-hero-scroll">
+                        <p class="ap-hero-kicker">MAKLUMAT HARI INI</p>
+                        <p class="ap-hero-title">Selamat datang, wahai pengembara</p>
+                        <p class="ap-hero-text">Pilihlah tembang kesukaanmu, simpan harta karun lagu, dan nikmati lirik di setiap bait.</p>
+                        <div class="ap-hero-actions">
+                            <button onclick="App.switch('search')" class="ap-btn ap-btn--red"><i data-lucide="search" class="w-4 h-4"></i> Telusuri Lagu</button>
+                            <button onclick="App.switch('library')" class="ap-btn"><i data-lucide="library" class="w-4 h-4"></i> Buka Pustaka</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="space-y-7">
                     <div>
                         <h2 class="text-sm font-bold text-white/60 mb-2.5 flex items-center gap-2">
-                            <span>Top Artists</span>
+                            <span>Penyair Termasyhur</span>
                         </h2>
                         <div id="home-artists" class="flex flex-wrap gap-2"></div>
                     </div>
                     <div>
                         <div class="flex items-center justify-between mb-3">
                             <h2 class="text-lg font-bold text-white tracking-wide flex items-center gap-2.5">
-                                <span>Quick Picks</span>
+                                <span>Pilihan Sang Raja</span>
                             </h2>
                             
                         </div>
@@ -96,7 +101,7 @@ var Home = {
                     </div>
                     <div>
                         <h2 class="text-lg font-bold text-white mb-3 tracking-wide flex items-center gap-2.5">
-                            <span>Popular Playlists</span>
+                            <span>Gulungan Populer</span>
                         </h2>
                         <div id="home-scroll" class="grid grid-cols-2 gap-3"></div>
                     </div>

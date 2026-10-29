@@ -2,7 +2,7 @@ var Search={
     render(){
         gid('view-search').innerHTML=`
         <div class="ap-banner">
-            <h1 class="text-3xl font-black text-white tracking-tight drop-shadow-md mb-3">Cari</h1>
+            <h1 class="text-3xl font-black text-white tracking-tight drop-shadow-md mb-3">Pencarian</h1>
             <form id="search-form" class="relative" autocomplete="off">
                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center text-white/60"><i data-lucide="search" class="h-5 w-5"></i></div>
                 <input type="text" id="search-input" class="w-full bg-black/40 backdrop-blur-md border border-white/20 text-white font-medium rounded-2xl pl-12 pr-20 py-3.5 focus:outline-none placeholder:text-white/50" placeholder="Cari lagu, artis, atau album..." autocomplete="off" />

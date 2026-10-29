@@ -12,7 +12,7 @@ var Library={
 
         var html = '<div class="ap-banner">' +
             '<div class="flex items-center justify-between mb-3">' +
-                '<h1 class="text-3xl font-black text-white tracking-tight drop-shadow-md">Library</h1>' +
+                '<h1 class="text-3xl font-black text-white tracking-tight drop-shadow-md">Pustaka</h1>' +
             '</div>' +
             
             '<!-- Tabs Navigation -->' +

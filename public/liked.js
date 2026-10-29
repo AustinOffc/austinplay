@@ -49,7 +49,7 @@ var Liked = {
 
         el.innerHTML = `
         <div class="ap-banner flex justify-between items-center">
-            <h1 class="text-3xl font-black text-white tracking-tight drop-shadow-md">Liked Songs</h1>
+            <h1 class="text-3xl font-black text-white tracking-tight drop-shadow-md">Harta Karun</h1>
             <div class="w-10 h-10 rounded-2xl bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-lg">
                 <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
             </div>
