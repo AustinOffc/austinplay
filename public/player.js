@@ -286,7 +286,7 @@ function pumpWarm() {
     fetchWithTimeout(API.ytplay, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({query: t.ytUrl || ('https://youtube.com/watch?v=' + v), prefetch: true})
+        body: JSON.stringify({query: t.ytUrl || ('https://youtube.com/watch?v=' + v), prefetch: true, warm: true})
     }, 50000).then(function(r){ return r.json(); }).then(function(d){
         if (d && d.status && d.result && d.result.download && d.result.download.audio) {
             audioUrlCache[v] = d.result.download.audio; savePwaCaches();
